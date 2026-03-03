@@ -9,13 +9,13 @@ export default function DebtDetails() {
   const [amount, setAmount] = useState('');
 
   useEffect(() => {
-    api.get(`/debts/${id}`).then(res => setDebt(res.data));
+    api.get(`/api/debts/${id}`).then(res => setDebt(res.data));
   }, [id]);
 
   async function addPayment() {
     if (!amount) return;
-    await api.post(`/debts/${id}/payments`, { amount });
-    const res = await api.get(`/debts/${id}`);
+    await api.post(`/api/debts/${id}/payments`, { amount });
+    const res = await api.get(`/api/debts/${id}`);
     setDebt(res.data);
     setAmount('');
   }
