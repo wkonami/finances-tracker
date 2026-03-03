@@ -11,8 +11,8 @@ export default function NewDebt() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      await api.post('/debts', { debtorName, totalAmount, notes });
-      nav('/dashboard');
+      await api.post('/api/debts', { debtorName, totalAmount, notes });
+      nav('/api/dashboard');
     } catch (err) {
       alert('Erro');
     }
