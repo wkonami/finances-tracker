@@ -8,7 +8,7 @@ export default function Dashboard() {
   const [debts, setDebts] = useState([]);
 
   useEffect(() => {
-    api.get('/debts').then(res => {
+    api.get('/api/debts').then(res => {
       setSummary(res.data.summary);
       setDebts(res.data.debts);
     });
@@ -26,12 +26,12 @@ export default function Dashboard() {
       )}
 
       <div style={{ marginTop: 20 }}>
-        <Link to="/new">Nova</Link>
+        <Link to="/api/new">Nova</Link>
         <h2>Últimas</h2>
         <ul>
           {debts.map(d => (
             <li key={d.id}>
-              <Link to={`/debt/${d.id}`}>{d.debtorName}</Link> — Aberto: {d.totalOpen.toFixed(2)}
+              <Link to={`/api/debt/${d.id}`}>{d.debtorName}</Link> — Aberto: {d.totalOpen.toFixed(2)}
             </li>
           ))}
         </ul>
