@@ -26,12 +26,12 @@ export default function Dashboard() {
       )}
 
       <div style={{ marginTop: 20 }}>
-        <Link to="/api/new">Nova</Link>
+        <Link to="/new">Nova</Link>
         <h2>Últimas</h2>
         <ul>
           {debts.map(d => (
             <li key={d.id}>
-              <Link to={`/api/debt/${d.id}`}>{d.debtorName}</Link> — Aberto: {d.totalOpen.toFixed(2)}
+              <Link to={`/debt/${d.id}`}>{d.debtorName}</Link> — Aberto: {d.totalOpen.toFixed(2)}
             </li>
           ))}
         </ul>
