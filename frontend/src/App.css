@@ -46,7 +46,9 @@
 
 .button {
   padding: 10px;
-  background-color: blue;
+  border-radius: 10px;
+  border: 2px solid gray;
+
 }
 
 @keyframes App-logo-spin {
