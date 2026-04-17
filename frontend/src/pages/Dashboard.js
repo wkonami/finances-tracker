@@ -20,18 +20,17 @@ export default function Dashboard() {
       {summary && (
         <div>
           <div>Total em aberto: {summary.totalOpen.toFixed(2)}</div>
-          <div>Total recebido: {summary.totalPaid.toFixed(2)}</div>
           <div>Quantidade: {summary.count}</div>
         </div>
       )}
 
       <div style={{ marginTop: 20 }}>
         <Link to="/new">Nova</Link>
-        <h2>Últimas</h2>
+        <h2>Em aberto:</h2>
         <ul>
           {debts.map(d => (
             <li key={d.id}>
-              <Link to={`/debt/${d.id}`}>{d.debtorName}</Link> — Aberto: {d.totalOpen.toFixed(2)}
+              <Link to={`/debt/${d.id}`}>{d.debtorName}</Link> : {d.totalOpen.toFixed(2)}
             </li>
           ))}
         </ul>
