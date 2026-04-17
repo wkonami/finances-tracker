@@ -25,7 +25,7 @@ export default function Dashboard() {
       )}
 
       <div style={{ marginTop: 20 }}>
-        <Link to="/new">Nova</Link>
+        <Link to="/new"><div className='button'>Nova</div></Link>
         <h2>Em aberto:</h2>
         <ul>
           {debts.map(d => (
