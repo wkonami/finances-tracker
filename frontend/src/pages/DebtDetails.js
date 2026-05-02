@@ -11,7 +11,7 @@ export default function DebtDetails() {
 
   const { id } = useParams();
 
-  const nav = useNavigate();
+  const navigate = useNavigate();
 
   const [debt, setDebt] = useState(null);
 
@@ -25,15 +25,18 @@ export default function DebtDetails() {
 
     try {
 
-      const res = await api.get(`/api/debts/${id}`);
+      const response = await api.get(`/api/debts/${id}`);
 
-      setDebt(res.data);
+      setDebt(response.data);
 
     } catch (error) {
 
       console.error(error);
 
+      alert('Erro ao carregar dívida');
+
     }
+
   }
 
   useEffect(() => {
@@ -43,6 +46,14 @@ export default function DebtDetails() {
   }, [id]);
 
   async function addPayment() {
+
+    if (!amount || !paymentDate) {
+
+      alert('Informe valor e data');
+
+      return;
+
+    }
 
     try {
 
@@ -62,55 +73,98 @@ export default function DebtDetails() {
 
       setNote('');
 
-      loadDebt();
+      await loadDebt();
 
     } catch (error) {
 
       console.error(error);
 
       alert('Erro ao adicionar pagamento');
+
     }
+
   }
 
   if (!debt) {
 
     return <div>Carregando...</div>;
+
   }
 
   return (
 
-    <div style={{ padding: 20 }}>
+    <div
+      style={{
+        padding: 20,
+        maxWidth: 700,
+        margin: '0 auto'
+      }}
+    >
 
-      <h2>{debt.debtorName}</h2>
+      <h2>
+        {debt.debtorName}
+      </h2>
 
       <div>
+
         <strong>Total:</strong>
         {' '}
-        R$ {parseFloat(debt.totalAmount).toFixed(2)}
+        R$
+        {' '}
+        {parseFloat(debt.totalAmount).toFixed(2)}
+
       </div>
 
       <div>
+
         <strong>Pago:</strong>
         {' '}
-        R$ {debt.totalPaid.toFixed(2)}
+        R$
+        {' '}
+        {Number(debt.totalPaid).toFixed(2)}
+
       </div>
 
       <div>
+
         <strong>Em aberto:</strong>
         {' '}
-        R$ {debt.totalOpen.toFixed(2)}
+        R$
+        {' '}
+        {Number(debt.totalOpen).toFixed(2)}
+
       </div>
+
+      {
+
+        debt.notes && (
+
+          <div style={{ marginTop: 10 }}>
+
+            <strong>Observações:</strong>
+
+            <div>
+              {debt.notes}
+            </div>
+
+          </div>
+
+        )
+
+      }
 
       <hr />
 
       <h3>Adicionar pagamento</h3>
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        maxWidth: 300
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          maxWidth: 350
+        }}
+      >
 
         <input
           type="number"
@@ -127,94 +181,138 @@ export default function DebtDetails() {
         />
 
         <textarea
-          placeholder="Observação"
+          placeholder="Observação do pagamento"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
 
         <button onClick={addPayment}>
+
           Adicionar pagamento
+
         </button>
 
       </div>
 
       <hr />
 
-      <h3>Histórico de pagamentos</h3>
+      <h3>
+        Histórico de pagamentos
+      </h3>
 
       {
 
-        debt.payments.length === 0 && (
+        !debt.payments ||
 
-          <p>Nenhum pagamento registrado.</p>
+        debt.payments.length === 0
 
-        )
+          ? (
 
-      }
+            <p>
+              Nenhum pagamento registrado.
+            </p>
 
-      <ul>
+          )
 
-        {
+          : (
 
-          debt.payments.map(payment => (
-
-            <li
-              key={payment.id}
+            <ul
               style={{
-                marginBottom: 10
+                padding: 0,
+                listStyle: 'none'
               }}
             >
 
-              <div>
-
-                💰
-                {' '}
-                R$ {parseFloat(payment.amount).toFixed(2)}
-
-              </div>
-
-              <div>
-
-                📅
-                {' '}
-                {
-
-                  new Date(
-                    payment.paymentDate
-                  ).toLocaleDateString()
-
-                }
-
-              </div>
-
               {
 
-                payment.note && (
+                debt.payments.map((payment) => (
 
-                  <div>
+                  <li
+                    key={payment.id}
+                    style={{
+                      border: '1px solid #ccc',
+                      padding: 12,
+                      marginBottom: 10,
+                      borderRadius: 8
+                    }}
+                  >
 
-                    📝
-                    {' '}
-                    {payment.note}
+                    <div>
 
-                  </div>
+                      <strong>
+                        Valor:
+                      </strong>
 
-                )
+                      {' '}
+
+                      R$
+
+                      {' '}
+
+                      {parseFloat(payment.amount).toFixed(2)}
+
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        Data:
+                      </strong>
+
+                      {' '}
+
+                      {
+
+                        new Date(
+                          payment.paymentDate
+                        ).toLocaleDateString('pt-BR')
+
+                      }
+
+                    </div>
+
+                    {
+
+                      payment.note && (
+
+                        <div>
+
+                          <strong>
+                            Observação:
+                          </strong>
+
+                          {' '}
+
+                          {payment.note}
+
+                        </div>
+
+                      )
+
+                    }
+
+                  </li>
+
+                ))
 
               }
 
-            </li>
+            </ul>
 
-          ))
+          )
 
-        }
+      }
 
-      </ul>
+      <button
+        onClick={() => navigate('/dashboard')}
+      >
 
-      <button onClick={() => nav('/dashboard')}>
         Voltar
+
       </button>
 
     </div>
+
   );
+
 }
