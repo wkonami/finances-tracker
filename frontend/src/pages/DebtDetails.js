@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
 
 import {
@@ -21,7 +20,7 @@ export default function DebtDetails() {
 
   const [note, setNote] = useState('');
 
-  async function loadDebt() {
+  const fetchDebt = useCallback(async () => {
 
     try {
 
@@ -37,13 +36,13 @@ export default function DebtDetails() {
 
     }
 
-  }
+  }, [id]);
 
   useEffect(() => {
 
-    loadDebt();
+    fetchDebt();
 
-  }, [id]);
+  }, [fetchDebt]);
 
   async function addPayment() {
 
@@ -73,7 +72,7 @@ export default function DebtDetails() {
 
       setNote('');
 
-      await loadDebt();
+      await fetchDebt();
 
     } catch (error) {
 
@@ -141,7 +140,9 @@ export default function DebtDetails() {
 
           <div style={{ marginTop: 10 }}>
 
-            <strong>Observações:</strong>
+            <strong>
+              Observações:
+            </strong>
 
             <div>
               {debt.notes}
@@ -155,7 +156,9 @@ export default function DebtDetails() {
 
       <hr />
 
-      <h3>Adicionar pagamento</h3>
+      <h3>
+        Adicionar pagamento
+      </h3>
 
       <div
         style={{
