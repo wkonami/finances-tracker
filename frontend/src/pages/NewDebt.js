@@ -12,7 +12,7 @@ export default function NewDebt() {
     e.preventDefault();
     try {
       await api.post('/api/debts', { debtorName, totalAmount, notes });
-      nav('/api/dashboard');
+      nav('/dashboard');
     } catch (err) {
       alert('Erro');
     }
