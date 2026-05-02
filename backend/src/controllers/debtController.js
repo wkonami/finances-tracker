@@ -70,7 +70,7 @@ async function listDebts(req, res) {
 
     });
 
-    const response = debts.map(debt => {
+    const formattedDebts = debts.map((debt) => {
 
       const totalPaid = debt.payments.reduce(
 
@@ -84,21 +84,37 @@ async function listDebts(req, res) {
 
       );
 
+      const totalOpen =
+
+        parseFloat(debt.totalAmount) - totalPaid;
+
       return {
 
         ...debt,
 
         totalPaid,
 
-        totalOpen:
+        totalOpen,
 
-          parseFloat(debt.totalAmount) - totalPaid
+        isClosed: totalOpen <= 0
 
       };
 
     });
 
-    const totalOpen = response.reduce(
+    const openDebts = formattedDebts.filter(
+
+      debt => !debt.isClosed
+
+    );
+
+    const closedDebts = formattedDebts.filter(
+
+      debt => debt.isClosed
+
+    );
+
+    const totalOpen = openDebts.reduce(
 
       (sum, debt) => sum + debt.totalOpen,
 
@@ -106,7 +122,7 @@ async function listDebts(req, res) {
 
     );
 
-    const totalPaid = response.reduce(
+    const totalPaid = formattedDebts.reduce(
 
       (sum, debt) => sum + debt.totalPaid,
 
@@ -122,11 +138,15 @@ async function listDebts(req, res) {
 
         totalPaid,
 
-        count: response.length
+        openCount: openDebts.length,
+
+        closedCount: closedDebts.length
 
       },
 
-      debts: response
+      debts: openDebts,
+
+      closedDebts
 
     });
 
@@ -135,7 +155,9 @@ async function listDebts(req, res) {
     console.error(error);
 
     res.status(500).json({
+
       message: 'Erro ao listar dívidas'
+
     });
 
   }
