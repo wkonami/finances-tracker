@@ -126,3 +126,18 @@
 .closed-debt-note {
   color: #555;
 }
+
+.debt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.debt-note {
+  color: #555;
+  font-size: 14px;
+}
+
+.debt-value {
+  font-weight: bold;
+}
