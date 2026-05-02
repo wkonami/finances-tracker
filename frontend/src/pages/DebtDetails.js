@@ -1,17 +1,10 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback
-} from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import api from '../services/api';
 
 import {
   useParams,
   useNavigate
 } from 'react-router-dom';
-
-import api from '../services/api';
-
-import '../App.css';
 
 export default function DebtDetails() {
 
@@ -99,57 +92,45 @@ export default function DebtDetails() {
 
   return (
 
-    <div className="container">
+    <div
+      style={{
+        padding: 20,
+        maxWidth: 700,
+        margin: '0 auto'
+      }}
+    >
 
-      <h1 className="title">
-
+      <h2>
         {debt.debtorName}
+      </h2>
 
-      </h1>
+      <div>
 
-      <div className="summary-box">
+        <strong>Total:</strong>
+        {' '}
+        R$
+        {' '}
+        {parseFloat(debt.totalAmount).toFixed(2)}
 
-        <div>
+      </div>
 
-          <strong>Total:</strong>
+      <div>
 
-          {' '}
+        <strong>Pago:</strong>
+        {' '}
+        R$
+        {' '}
+        {Number(debt.totalPaid).toFixed(2)}
 
-          R$
+      </div>
 
-          {' '}
+      <div>
 
-          {parseFloat(debt.totalAmount).toFixed(2)}
-
-        </div>
-
-        <div>
-
-          <strong>Pago:</strong>
-
-          {' '}
-
-          R$
-
-          {' '}
-
-          {Number(debt.totalPaid).toFixed(2)}
-
-        </div>
-
-        <div>
-
-          <strong>Em aberto:</strong>
-
-          {' '}
-
-          R$
-
-          {' '}
-
-          {Number(debt.totalOpen).toFixed(2)}
-
-        </div>
+        <strong>Em aberto:</strong>
+        {' '}
+        R$
+        {' '}
+        {Number(debt.totalOpen).toFixed(2)}
 
       </div>
 
@@ -157,16 +138,14 @@ export default function DebtDetails() {
 
         debt.notes && (
 
-          <div className="details-note-box">
+          <div style={{ marginTop: 10 }}>
 
             <strong>
               Observações:
             </strong>
 
-            <div className="details-note">
-
+            <div>
               {debt.notes}
-
             </div>
 
           </div>
@@ -175,14 +154,22 @@ export default function DebtDetails() {
 
       }
 
-      <div className="payment-form">
+      <hr />
 
-        <h2>
-          Adicionar pagamento
-        </h2>
+      <h3>
+        Adicionar pagamento
+      </h3>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          maxWidth: 350
+        }}
+      >
 
         <input
-          className="input"
           type="number"
           step="0.01"
           placeholder="Valor"
@@ -191,23 +178,18 @@ export default function DebtDetails() {
         />
 
         <input
-          className="input"
           type="date"
           value={paymentDate}
           onChange={(e) => setPaymentDate(e.target.value)}
         />
 
         <textarea
-          className="textarea"
           placeholder="Observação do pagamento"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
 
-        <button
-          className="button"
-          onClick={addPayment}
-        >
+        <button onClick={addPayment}>
 
           Adicionar pagamento
 
@@ -215,111 +197,118 @@ export default function DebtDetails() {
 
       </div>
 
-      <div className="payments-history">
+      <hr />
 
-        <h2>
-          Histórico de pagamentos
-        </h2>
+      <h3>
+        Histórico de pagamentos
+      </h3>
 
-        {
+      {
 
-          !debt.payments ||
+        !debt.payments ||
 
-          debt.payments.length === 0
+        debt.payments.length === 0
 
-            ? (
+          ? (
 
-              <p>
-                Nenhum pagamento registrado.
-              </p>
+            <p>
+              Nenhum pagamento registrado.
+            </p>
 
-            )
+          )
 
-            : (
+          : (
 
-              <ul className="payment-list">
+            <ul
+              style={{
+                padding: 0,
+                listStyle: 'none'
+              }}
+            >
 
-                {
+              {
 
-                  debt.payments.map((payment) => (
+                debt.payments.map((payment) => (
 
-                    <li
-                      key={payment.id}
-                      className="payment-item"
-                    >
+                  <li
+                    key={payment.id}
+                    style={{
+                      border: '1px solid #ccc',
+                      padding: 12,
+                      marginBottom: 10,
+                      borderRadius: 8
+                    }}
+                  >
 
-                      <div>
+                    <div>
 
-                        <strong>
-                          Valor:
-                        </strong>
+                      <strong>
+                        Valor:
+                      </strong>
 
-                        {' '}
+                      {' '}
 
-                        R$
+                      R$
 
-                        {' '}
+                      {' '}
 
-                        {parseFloat(payment.amount).toFixed(2)}
+                      {parseFloat(payment.amount).toFixed(2)}
 
-                      </div>
+                    </div>
 
-                      <div>
+                    <div>
 
-                        <strong>
-                          Data:
-                        </strong>
+                      <strong>
+                        Data:
+                      </strong>
 
-                        {' '}
-
-                        {
-
-                          payment.paymentDate
-                            .split('T')[0]
-                            .split('-')
-                            .reverse()
-                            .join('/')
-
-                        }
-
-                      </div>
+                      {' '}
 
                       {
 
-                        payment.note && (
-
-                          <div>
-
-                            <strong>
-                              Observação:
-                            </strong>
-
-                            {' '}
-
-                            {payment.note}
-
-                          </div>
-
-                        )
+                        payment.paymentDate
+                          .split('T')[0]
+                          .split('-')
+                          .reverse()
+                          .join('/')
 
                       }
 
-                    </li>
+                    </div>
 
-                  ))
+                    {
 
-                }
+                      payment.note && (
 
-              </ul>
+                        <div>
 
-            )
+                          <strong>
+                            Observação:
+                          </strong>
 
-        }
+                          {' '}
 
-      </div>
+                          {payment.note}
+
+                        </div>
+
+                      )
+
+                    }
+
+                  </li>
+
+                ))
+
+              }
+
+            </ul>
+
+          )
+
+      }
 
       <button
-        className="button"
         onClick={() => navigate('/dashboard')}
       >
 
