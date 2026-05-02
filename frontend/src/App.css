@@ -203,3 +203,30 @@
 
   margin-bottom: 10px;
 }
+
+.new-debt-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.new-debt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.new-debt-form input,
+.new-debt-form textarea {
+  padding: 10px;
+
+  border: 1px solid #999;
+  border-radius: 8px;
+
+  font-size: 14px;
+}
+
+.new-debt-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
