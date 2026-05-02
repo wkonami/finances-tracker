@@ -7,6 +7,7 @@ export default function DebtDetails() {
   const nav = useNavigate();
   const [debt, setDebt] = useState(null);
   const [amount, setAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState('');
 
   useEffect(() => {
     api.get(`/api/debts/${id}`).then(res => setDebt(res.data));
