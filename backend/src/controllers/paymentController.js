@@ -1,54 +1,45 @@
 const prisma = require('../prismaClient');
 
 async function addPayment(req, res) {
-  const debtId = parseInt(req.params.id);
-
-  const { amount, paymentDate } = req.body;
-
-  // validações
-  if (!amount) {
-    return res.status(400).json({
-      message: 'Missing amount'
-    });
-  }
-
-  if (!paymentDate) {
-    return res.status(400).json({
-      message: 'Missing payment date'
-    });
-  }
-
   try {
+    const debtId = parseInt(req.params.id);
+
+    const {
+      amount,
+      paymentDate,
+      note
+    } = req.body;
+
+    if (!amount || !paymentDate) {
+      return res.status(400).json({
+        message: 'Valor e data são obrigatórios'
+      });
+    }
 
     const payment = await prisma.payment.create({
       data: {
-
-        // valor pago
         amount: parseFloat(amount),
 
-        // data informada manualmente
         paymentDate: new Date(paymentDate),
 
-        // relação com dívida
+        note,
+
         debt: {
           connect: {
             id: debtId
           }
         }
-
       }
     });
 
     res.json(payment);
 
   } catch (error) {
-
     console.error(error);
 
     res.status(500).json({
-      message: 'Error creating payment'
+      message: 'Erro ao adicionar pagamento'
     });
-
   }
 }
 
@@ -56,32 +47,17 @@ async function listPayments(req, res) {
 
   const debtId = parseInt(req.params.id);
 
-  try {
+  const payments = await prisma.payment.findMany({
+    where: {
+      debtId
+    },
 
-    const payments = await prisma.payment.findMany({
+    orderBy: {
+      paymentDate: 'desc'
+    }
+  });
 
-      where: {
-        debtId
-      },
-
-      // ordena pela data do pagamento
-      orderBy: {
-        paymentDate: 'desc'
-      }
-
-    });
-
-    res.json(payments);
-
-  } catch (error) {
-
-    console.error(error);
-
-    res.status(500).json({
-      message: 'Error listing payments'
-    });
-
-  }
+  res.json(payments);
 }
 
 module.exports = {

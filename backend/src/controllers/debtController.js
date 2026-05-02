@@ -1,64 +1,272 @@
 const prisma = require('../prismaClient');
 
 async function createDebt(req, res) {
-  const { debtorName, totalAmount, notes } = req.body;
-  if (!debtorName || totalAmount == null) return res.status(400).json({ message: 'Missing' });
 
-  const debt = await prisma.debt.create({
-    data: {
+  try {
+
+    const {
       debtorName,
-      totalAmount: parseFloat(totalAmount),
+      totalAmount,
       notes
+    } = req.body;
+
+    if (!debtorName || totalAmount == null) {
+
+      return res.status(400).json({
+        message: 'Nome do devedor e valor são obrigatórios'
+      });
+
     }
-  });
-  res.json(debt);
+
+    const debt = await prisma.debt.create({
+
+      data: {
+
+        debtorName,
+
+        totalAmount: parseFloat(totalAmount),
+
+        notes
+
+      }
+
+    });
+
+    res.json(debt);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Erro ao criar dívida'
+    });
+
+  }
+
 }
 
 async function listDebts(req, res) {
-  const debts = await prisma.debt.findMany({
-    include: {
-      payments: true
-    },
-    orderBy: { createdAt: 'desc' }
-  });
 
-  // calculate totals
-  const response = debts.map(d => {
-    const paid = d.payments.reduce((s, p) => s + parseFloat(p.amount), 0);
-    return {
-      ...d,
-      totalPaid: paid,
-      totalOpen: parseFloat(d.totalAmount) - paid
-    };
-  });
+  try {
 
-  // summary
-  const totalOpen = response.reduce((s, d) => s + d.totalOpen, 0);
-  const totalPaid = response.reduce((s, d) => s + d.totalPaid, 0);
+    const debts = await prisma.debt.findMany({
 
-  res.json({ summary: { totalOpen, totalPaid, count: response.length }, debts: response });
+      include: {
+
+        payments: {
+
+          orderBy: {
+            paymentDate: 'desc'
+          }
+
+        }
+
+      },
+
+      orderBy: {
+        createdAt: 'desc'
+      }
+
+    });
+
+    const response = debts.map(debt => {
+
+      const totalPaid = debt.payments.reduce(
+
+        (sum, payment) => {
+
+          return sum + parseFloat(payment.amount);
+
+        },
+
+        0
+
+      );
+
+      return {
+
+        ...debt,
+
+        totalPaid,
+
+        totalOpen:
+
+          parseFloat(debt.totalAmount) - totalPaid
+
+      };
+
+    });
+
+    const totalOpen = response.reduce(
+
+      (sum, debt) => sum + debt.totalOpen,
+
+      0
+
+    );
+
+    const totalPaid = response.reduce(
+
+      (sum, debt) => sum + debt.totalPaid,
+
+      0
+
+    );
+
+    res.json({
+
+      summary: {
+
+        totalOpen,
+
+        totalPaid,
+
+        count: response.length
+
+      },
+
+      debts: response
+
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Erro ao listar dívidas'
+    });
+
+  }
+
 }
 
 async function getDebt(req, res) {
-  const id = parseInt(req.params.id);
-  const debt = await prisma.debt.findUnique({ where: { id }, include: { payments: true } });
-  if (!debt) return res.status(404).json({ message: 'Not found' });
 
-  const totalPaid = debt.payments.reduce((s, p) => s + parseFloat(p.amount), 0);
-  res.json({ ...debt, totalPaid, totalOpen: parseFloat(debt.totalAmount) - totalPaid });
+  try {
+
+    const id = parseInt(req.params.id);
+
+    const debt = await prisma.debt.findUnique({
+
+      where: {
+        id
+      },
+
+      include: {
+
+        payments: {
+
+          orderBy: {
+            paymentDate: 'desc'
+          }
+
+        }
+
+      }
+
+    });
+
+    if (!debt) {
+
+      return res.status(404).json({
+        message: 'Dívida não encontrada'
+      });
+
+    }
+
+    const totalPaid = debt.payments.reduce(
+
+      (sum, payment) => {
+
+        return sum + parseFloat(payment.amount);
+
+      },
+
+      0
+
+    );
+
+    res.json({
+
+      ...debt,
+
+      totalPaid,
+
+      totalOpen:
+
+        parseFloat(debt.totalAmount) - totalPaid
+
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Erro ao buscar dívida'
+    });
+
+  }
+
 }
 
 async function updateDebt(req, res) {
-  const id = parseInt(req.params.id);
-  const data = req.body; // allow editing totalAmount and notes
-  const updated = await prisma.debt.update({
-    where: { id },
-    data: {
-      totalAmount: data.totalAmount !== undefined ? parseFloat(data.totalAmount) : undefined,
-      notes: data.notes
-    }
-  });
-  res.json(updated);
+
+  try {
+
+    const id = parseInt(req.params.id);
+
+    const {
+      totalAmount,
+      notes
+    } = req.body;
+
+    const updated = await prisma.debt.update({
+
+      where: {
+        id
+      },
+
+      data: {
+
+        totalAmount:
+
+          totalAmount !== undefined
+
+            ? parseFloat(totalAmount)
+
+            : undefined,
+
+        notes
+
+      }
+
+    });
+
+    res.json(updated);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Erro ao atualizar dívida'
+    });
+
+  }
+
 }
 
-module.exports = { createDebt, listDebts, getDebt, updateDebt };
+module.exports = {
+
+  createDebt,
+
+  listDebts,
+
+  getDebt,
+
+  updateDebt
+
+};
