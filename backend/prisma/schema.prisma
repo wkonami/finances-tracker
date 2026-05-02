@@ -25,6 +25,7 @@ model Debt {
 model Payment {
   id        Int      @id @default(autoincrement())
   amount    Decimal  @db.Decimal(10,2)
+  paymentDate DateTime
   createdAt DateTime @default(now())
   debtId    Int
   debt      Debt     @relation(fields: [debtId], references: [id])
