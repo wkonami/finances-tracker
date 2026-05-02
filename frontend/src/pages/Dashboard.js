@@ -21,7 +21,7 @@ export default function Dashboard() {
 
       try {
 
-        const response = await api.get('/api/debts');
+        const response = await api.get('/debts');
 
         setSummary(response.data.summary);
 

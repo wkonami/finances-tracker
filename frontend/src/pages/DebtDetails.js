@@ -31,7 +31,7 @@ export default function DebtDetails() {
 
     try {
 
-      const response = await api.get(`/api/debts/${id}`);
+      const response = await api.get(`/debts/${id}`);
 
       setDebt(response.data);
 
@@ -63,7 +63,7 @@ export default function DebtDetails() {
 
     try {
 
-      await api.post(`/api/debts/${id}/payments`, {
+      await api.post(`/debts/${id}/payments`, {
 
         amount,
 
