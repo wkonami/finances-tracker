@@ -29,9 +29,5 @@ model Payment {
   note      String?
   createdAt DateTime @default(now())
   debtId    Int
-  debt Debt @relation(
-    fields: [debtId],
-    references: [id],
-    onDelete: Cascade
-  )
+  debt Debt @relation(fields: [debtId], references: [id], onDelete: Cascade)
 }
