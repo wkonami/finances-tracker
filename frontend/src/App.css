@@ -141,3 +141,65 @@
 .debt-value {
   font-weight: bold;
 }
+
+.details-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.details-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 15px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+
+  border: 2px solid #282c34;
+  border-radius: 10px;
+}
+
+.details-notes {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  max-width: 350px;
+}
+
+.payment-form input,
+.payment-form textarea {
+  padding: 10px;
+
+  border: 1px solid #999;
+  border-radius: 8px;
+
+  font-size: 14px;
+}
+
+.payment-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.payment-list {
+  list-style: none;
+  padding: 0;
+}
+
+.payment-item {
+  border: 1px solid #ccc;
+
+  border-radius: 10px;
+
+  padding: 15px;
+
+  margin-bottom: 10px;
+}

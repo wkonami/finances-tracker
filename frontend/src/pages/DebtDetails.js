@@ -1,10 +1,17 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useCallback
+} from 'react';
+
 import api from '../services/api';
 
 import {
   useParams,
   useNavigate
 } from 'react-router-dom';
+
+import '../App.css';
 
 export default function DebtDetails() {
 
@@ -92,45 +99,37 @@ export default function DebtDetails() {
 
   return (
 
-    <div
-      style={{
-        padding: 20,
-        maxWidth: 700,
-        margin: '0 auto'
-      }}
-    >
+    <div className="details-container">
 
       <h2>
         {debt.debtorName}
       </h2>
 
-      <div>
+      <div className="details-summary">
 
-        <strong>Total:</strong>
-        {' '}
-        R$
-        {' '}
-        {parseFloat(debt.totalAmount).toFixed(2)}
+        <div>
 
-      </div>
+          <strong>Total:</strong>
+          {' '}
+          R$ {parseFloat(debt.totalAmount).toFixed(2)}
 
-      <div>
+        </div>
 
-        <strong>Pago:</strong>
-        {' '}
-        R$
-        {' '}
-        {Number(debt.totalPaid).toFixed(2)}
+        <div>
 
-      </div>
+          <strong>Pago:</strong>
+          {' '}
+          R$ {Number(debt.totalPaid).toFixed(2)}
 
-      <div>
+        </div>
 
-        <strong>Em aberto:</strong>
-        {' '}
-        R$
-        {' '}
-        {Number(debt.totalOpen).toFixed(2)}
+        <div>
+
+          <strong>Em aberto:</strong>
+          {' '}
+          R$ {Number(debt.totalOpen).toFixed(2)}
+
+        </div>
 
       </div>
 
@@ -138,7 +137,7 @@ export default function DebtDetails() {
 
         debt.notes && (
 
-          <div style={{ marginTop: 10 }}>
+          <div className="details-notes">
 
             <strong>
               Observações:
@@ -160,14 +159,7 @@ export default function DebtDetails() {
         Adicionar pagamento
       </h3>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          maxWidth: 350
-        }}
-      >
+      <div className="payment-form">
 
         <input
           type="number"
@@ -189,7 +181,10 @@ export default function DebtDetails() {
           onChange={(e) => setNote(e.target.value)}
         />
 
-        <button onClick={addPayment}>
+        <button
+          className="button"
+          onClick={addPayment}
+        >
 
           Adicionar pagamento
 
@@ -219,12 +214,7 @@ export default function DebtDetails() {
 
           : (
 
-            <ul
-              style={{
-                padding: 0,
-                listStyle: 'none'
-              }}
-            >
+            <ul className="payment-list">
 
               {
 
@@ -232,12 +222,7 @@ export default function DebtDetails() {
 
                   <li
                     key={payment.id}
-                    style={{
-                      border: '1px solid #ccc',
-                      padding: 12,
-                      marginBottom: 10,
-                      borderRadius: 8
-                    }}
+                    className="payment-item"
                   >
 
                     <div>
@@ -309,6 +294,7 @@ export default function DebtDetails() {
       }
 
       <button
+        className="button"
         onClick={() => navigate('/dashboard')}
       >
 
