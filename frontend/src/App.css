@@ -247,3 +247,37 @@
 
   text-align: center;
 }
+
+.login-container {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 30px;
+
+  border: 2px solid #282c34;
+  border-radius: 10px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.login-form input {
+  padding: 10px;
+
+  border: 1px solid #999;
+  border-radius: 8px;
+
+  font-size: 14px;
+}
