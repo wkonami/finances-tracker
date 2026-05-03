@@ -230,3 +230,20 @@
   min-height: 100px;
   resize: vertical;
 }
+
+.loading-screen {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-box {
+  padding: 30px;
+
+  border: 2px solid #282c34;
+  border-radius: 10px;
+
+  text-align: center;
+}

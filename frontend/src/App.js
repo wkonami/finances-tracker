@@ -1,24 +1,137 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, {
+  useEffect,
+  useState
+} from 'react';
+
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate
+} from 'react-router-dom';
+
+import api from './services/api';
+
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NewDebt from './pages/NewDebt';
 import DebtDetails from './pages/DebtDetails';
 
+import './App.css';
+
 function PrivateRoute({ children }) {
+
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/" />;
+
+  if (!token) {
+
+    return <Navigate to="/" replace />;
+
+  }
+
+  return children;
+
 }
 
 export default function App() {
+
+  const [loadingServer, setLoadingServer] = useState(true);
+
+  useEffect(() => {
+
+    async function wakeServer() {
+
+      try {
+
+        await api.get('/health');
+
+      } catch (error) {
+
+        console.error(error);
+
+      } finally {
+
+        setLoadingServer(false);
+
+      }
+
+    }
+
+    wakeServer();
+
+  }, []);
+
+  if (loadingServer) {
+
+    return (
+
+      <div className="loading-screen">
+
+        <div className="loading-box">
+
+          <h2>
+            Conectando ao servidor...
+          </h2>
+
+          <p>
+            O servidor pode estar iniciando.
+          </p>
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
   return (
+
     <BrowserRouter>
+
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/new" element={<PrivateRoute><NewDebt /></PrivateRoute>} />
-        <Route path="/debt/:id" element={<PrivateRoute><DebtDetails /></PrivateRoute>} />
+
+        <Route
+          path="/"
+          element={<Login />}
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/new"
+          element={
+            <PrivateRoute>
+              <NewDebt />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/debt/:id"
+          element={
+            <PrivateRoute>
+              <DebtDetails />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
+
       </Routes>
+
     </BrowserRouter>
+
   );
+
 }

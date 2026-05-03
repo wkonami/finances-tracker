@@ -13,9 +13,12 @@ app.use(cors({
   origin: FRONTEND_ORIGIN,
   credentials: true
 }));
-
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/debts', debtRoutes);
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
