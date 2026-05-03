@@ -13,11 +13,11 @@ app.use(cors({
   origin: FRONTEND_ORIGIN,
   credentials: true
 }));
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ ok: true });
 });
-app.use('/api/auth', authRoutes);
-app.use('/api/debts', debtRoutes);
+app.use('/auth', authRoutes);
+app.use('/debts', debtRoutes);
 
 
 const PORT = process.env.PORT || 4000;
