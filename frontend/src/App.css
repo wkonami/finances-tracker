@@ -604,6 +604,22 @@ textarea:focus {
 
 }
 
+.danger-button {
+
+  background: #c0392b;
+
+  color: white;
+
+  border: none;
+
+}
+
+.danger-button:hover {
+
+  opacity: 0.9;
+
+}
+
 /* =========================================================
    RESPONSIVE
 ========================================================= */
