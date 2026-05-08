@@ -1,7 +1,9 @@
 const prisma = require('../prismaClient');
 
 async function addPayment(req, res) {
+
   try {
+
     const debtId = parseInt(req.params.id);
 
     const {
@@ -11,53 +13,135 @@ async function addPayment(req, res) {
     } = req.body;
 
     if (!amount || !paymentDate) {
+
       return res.status(400).json({
         message: 'Valor e data são obrigatórios'
       });
+
     }
 
-    const payment = await prisma.payment.create({
-      data: {
-        amount: parseFloat(amount),
+    const debt = await prisma.debt.findUnique({
 
-        paymentDate: new Date(paymentDate),
+      where: {
+        id: debtId
+      },
 
-        note,
-
-        debt: {
-          connect: {
-            id: debtId
-          }
-        }
+      include: {
+        payments: true
       }
+
     });
 
-    res.json(payment);
+    if (!debt) {
+
+      return res.status(404).json({
+        message: 'Dívida não encontrada'
+      });
+
+    }
+
+    const totalPaid =
+      debt.payments.reduce(
+
+        (sum, payment) =>
+
+          sum + Number(payment.amount),
+
+        0
+
+      );
+
+    const newTotalPaid =
+      totalPaid + Number(amount);
+
+    // tolerância para evitar problemas de precisão decimal
+    if (
+
+      newTotalPaid >
+
+      Number(debt.totalAmount) + 0.01
+
+    ) {
+
+      return res.status(400).json({
+
+        message:
+          'Pagamento ultrapassa o valor total da dívida'
+
+      });
+
+    }
+
+    const payment =
+      await prisma.payment.create({
+
+        data: {
+
+          amount: parseFloat(amount),
+
+          paymentDate:
+            new Date(paymentDate),
+
+          note,
+
+          debt: {
+
+            connect: {
+              id: debtId
+            }
+
+          }
+
+        }
+
+      });
+
+    return res.json(payment);
 
   } catch (error) {
+
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Erro ao adicionar pagamento'
     });
+
   }
+
 }
 
 async function listPayments(req, res) {
 
-  const debtId = parseInt(req.params.id);
+  try {
 
-  const payments = await prisma.payment.findMany({
-    where: {
-      debtId
-    },
+    const debtId =
+      parseInt(req.params.id);
 
-    orderBy: {
-      paymentDate: 'desc'
-    }
-  });
+    const payments =
+      await prisma.payment.findMany({
 
-  res.json(payments);
+        where: {
+          debtId
+        },
+
+        orderBy: {
+          paymentDate: 'desc'
+        }
+
+      });
+
+    return res.json(payments);
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      message: 'Erro ao listar pagamentos'
+    });
+
+  }
+
 }
 
 module.exports = {

@@ -85,7 +85,10 @@ export default function DebtDetails() {
 
       console.error(error);
 
-      alert('Erro ao adicionar pagamento');
+      alert(
+        error.response?.data?.message ||
+        'Erro ao adicionar pagamento'
+      );
 
     }
 
