@@ -250,19 +250,6 @@ export default function Dashboard() {
 
                             </span>
 
-                            <button
-                              className="button danger-button"
-                              onClick={() =>
-
-                                deleteDebt(debt.id)
-
-                              }
-                            >
-
-                              Arquivar
-
-                            </button>
-
                           </div>
 
                         </li>
