@@ -51,6 +51,33 @@ export default function DebtDetails() {
 
   }, [fetchDebt]);
 
+  async function deleteCurrentDebt() {
+
+    const confirmed =
+      window.confirm(
+        'Deseja arquivar esta dívida?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+
+      await api.delete(`/debts/${id}`);
+
+      navigate('/dashboard');
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert('Erro ao arquivar');
+
+    }
+
+  }
+
   async function addPayment() {
 
     if (!amount || !paymentDate) {

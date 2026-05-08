@@ -1,19 +1,39 @@
 const express = require('express');
+
 const router = express.Router();
-const auth = require('../middlewares/authMiddleware');
-const debtController = require('../controllers/debtController');
-const paymentController = require('../controllers/paymentController');
 
-router.use(auth);
+const authMiddleware =
+  require('../middlewares/authMiddleware');
 
-// debts
-router.post('/', debtController.createDebt);
-router.get('/', debtController.listDebts);
-router.get('/:id', debtController.getDebt);
-router.put('/:id', debtController.updateDebt);
+const {
+  createDebt,
+  listDebts,
+  getDebt,
+  updateDebt,
+  deleteDebt
+} = require('../controllers/debtController');
 
-// payments
-router.post('/:id/payments', paymentController.addPayment);
-router.get('/:id/payments', paymentController.listPayments);
+const {
+  addPayment,
+  listPayments
+} = require('../controllers/paymentController');
+
+router.use(authMiddleware);
+
+// dívidas
+router.post('/', createDebt);
+
+router.get('/', listDebts);
+
+router.get('/:id', getDebt);
+
+router.put('/:id', updateDebt);
+
+router.delete('/:id', deleteDebt);
+
+// pagamentos
+router.post('/:id/payments', addPayment);
+
+router.get('/:id/payments', listPayments);
 
 module.exports = router;

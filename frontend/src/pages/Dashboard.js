@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, {
+  useEffect,
+  useState,
+  useCallback
+} from 'react';
+
+import {
+  Link
+} from 'react-router-dom';
 
 import api from '../services/api';
 
@@ -7,25 +14,33 @@ import '../App.css';
 
 export default function Dashboard() {
 
-  const [summary, setSummary] = useState(null);
+  const [summary, setSummary] =
+    useState(null);
 
-  const [debts, setDebts] = useState([]);
+  const [debts, setDebts] =
+    useState([]);
 
-  const [closedDebts, setClosedDebts] = useState([]);
+  const [closedDebts, setClosedDebts] =
+    useState([]);
 
-  const [activeTab, setActiveTab] = useState('open');
+  const [activeTab, setActiveTab] =
+    useState('open');
 
-  useEffect(() => {
-
-    async function loadDebts() {
+  const loadDebts =
+    useCallback(async () => {
 
       try {
 
-        const response = await api.get('/debts');
+        const response =
+          await api.get('/debts');
 
-        setSummary(response.data.summary);
+        setSummary(
+          response.data.summary
+        );
 
-        setDebts(response.data.debts);
+        setDebts(
+          response.data.debts
+        );
 
         setClosedDebts(
           response.data.closedDebts || []
@@ -35,15 +50,48 @@ export default function Dashboard() {
 
         console.error(error);
 
-        alert('Erro ao carregar dívidas');
+        alert(
+          'Erro ao carregar dívidas'
+        );
 
       }
 
-    }
+    }, []);
+
+  useEffect(() => {
 
     loadDebts();
 
-  }, []);
+  }, [loadDebts]);
+
+  async function deleteDebt(id) {
+
+    const confirmed =
+      window.confirm(
+        'Deseja arquivar esta dívida?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+
+      await api.delete(`/debts/${id}`);
+
+      await loadDebts();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        'Erro ao arquivar dívida'
+      );
+
+    }
+
+  }
 
   return (
 
@@ -60,21 +108,49 @@ export default function Dashboard() {
           <div className="summary-box">
 
             <div>
-              <strong>Total em aberto:</strong>
+
+              <strong>
+                Total em aberto:
+              </strong>
+
               {' '}
-              R$ {summary.totalOpen.toFixed(2)}
+
+              R$
+
+              {' '}
+
+              {
+
+                Number(
+                  summary.totalOpen
+                ).toFixed(2)
+
+              }
+
             </div>
 
             <div>
-              <strong>Dívidas abertas:</strong>
+
+              <strong>
+                Dívidas abertas:
+              </strong>
+
               {' '}
+
               {summary.openCount}
+
             </div>
 
             <div>
-              <strong>Dívidas quitadas:</strong>
+
+              <strong>
+                Dívidas quitadas:
+              </strong>
+
               {' '}
+
               {summary.closedCount}
+
             </div>
 
           </div>
@@ -87,22 +163,36 @@ export default function Dashboard() {
 
         <button
           className="button"
-          onClick={() => setActiveTab('open')}
+          onClick={() =>
+
+            setActiveTab('open')
+
+          }
         >
+
           Em aberto
+
         </button>
 
         <button
           className="button"
-          onClick={() => setActiveTab('closed')}
+          onClick={() =>
+
+            setActiveTab('closed')
+
+          }
         >
+
           Quitadas
+
         </button>
 
         <Link to="/new">
 
           <button className="button">
+
             Nova dívida
+
           </button>
 
         </Link>
@@ -121,67 +211,98 @@ export default function Dashboard() {
 
             {
 
-              debts.length === 0 ? (
+              debts.length === 0
 
-                <p>
-                  Nenhuma dívida em aberto.
-                </p>
+                ? (
 
-              ) : (
+                  <p>
+                    Nenhuma dívida em aberto.
+                  </p>
 
-                <ul className="debt-list">
+                )
 
-                  {
+                : (
 
-                    debts.map((debt) => (
+                  <ul className="debt-list">
 
-                      <li
-                        key={debt.id}
-                        className="debt-item"
-                      >
+                    {
 
-                        <div className="debt-info">
+                      debts.map((debt) => (
 
-                          <Link
-                            className="debt-link"
-                            to={`/debt/${debt.id}`}
-                          >
+                        <li
+                          key={debt.id}
+                          className="debt-item"
+                        >
 
-                            {debt.debtorName}
+                          <div className="debt-info">
 
-                          </Link>
+                            <Link
+                              className="debt-link"
+                              to={`/debt/${debt.id}`}
+                            >
 
-                          {
+                              {debt.debtorName}
 
-                            debt.notes && (
+                            </Link>
 
-                              <div className="debt-note">
+                            {
 
-                                {debt.notes}
+                              debt.notes && (
 
-                              </div>
+                                <div className="debt-note">
 
-                            )
+                                  {debt.notes}
 
-                          }
+                                </div>
 
-                        </div>
+                              )
 
-                        <span className="debt-value">
+                            }
 
-                          R$ {debt.totalOpen.toFixed(2)}
+                          </div>
 
-                        </span>
+                          <div className="debt-actions">
 
-                      </li>
+                            <span className="debt-value">
 
-                    ))
+                              R$
 
-                  }
+                              {' '}
 
-                </ul>
+                              {
 
-              )
+                                Number(
+                                  debt.totalOpen
+                                ).toFixed(2)
+
+                              }
+
+                            </span>
+
+                            <button
+                              className="button danger-button"
+                              onClick={() =>
+
+                                deleteDebt(debt.id)
+
+                              }
+                            >
+
+                              Arquivar
+
+                            </button>
+
+                          </div>
+
+                        </li>
+
+                      ))
+
+                    }
+
+                  </ul>
+
+                )
 
             }
 
@@ -203,54 +324,65 @@ export default function Dashboard() {
 
             {
 
-              closedDebts.length === 0 ? (
+              closedDebts.length === 0
 
-                <p>
-                  Nenhuma dívida quitada.
-                </p>
+                ? (
 
-              ) : (
+                  <p>
+                    Nenhuma dívida quitada.
+                  </p>
 
-                <ul className="debt-list">
+                )
 
-                  {
+                : (
 
-                    closedDebts.map((debt) => (
+                  <ul className="debt-list">
 
-                      <li
-                        key={debt.id}
-                        className="closed-debt-item"
-                      >
+                    {
 
-                        <div className="closed-debt-name">
+                      closedDebts.map((debt) => (
 
-                          {debt.debtorName}
+                        <li
+                          key={debt.id}
+                          className="closed-debt-item"
+                        >
 
-                        </div>
+                          <Link
+                            className="debt-link"
+                            to={`/debt/${debt.id}`}
+                          >
 
-                        {
+                            <div className="closed-debt-name">
 
-                          debt.notes && (
-
-                            <div className="closed-debt-note">
-
-                              {debt.notes}
+                              {debt.debtorName}
 
                             </div>
 
-                          )
+                          </Link>
 
-                        }
+                          {
 
-                      </li>
+                            debt.notes && (
 
-                    ))
+                              <div className="closed-debt-note">
 
-                  }
+                                {debt.notes}
 
-                </ul>
+                              </div>
 
-              )
+                            )
+
+                          }
+
+                        </li>
+
+                      ))
+
+                    }
+
+                  </ul>
+
+                )
 
             }
 

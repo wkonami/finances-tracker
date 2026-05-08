@@ -19,6 +19,7 @@ model Debt {
   totalAmount Decimal   @db.Decimal(10,2)
   notes       String?
   createdAt   DateTime  @default(now())
+  deletedAt DateTime?
   payments    Payment[]
 }
 

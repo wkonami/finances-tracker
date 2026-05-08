@@ -52,16 +52,12 @@ async function listDebts(req, res) {
 
     const debts = await prisma.debt.findMany({
 
+      where: {
+        deletedAt: null
+      },
+
       include: {
-
-        payments: {
-
-          orderBy: {
-            paymentDate: 'desc'
-          }
-
-        }
-
+        payments: true
       },
 
       orderBy: {
@@ -170,22 +166,18 @@ async function getDebt(req, res) {
 
     const id = parseInt(req.params.id);
 
-    const debt = await prisma.debt.findUnique({
+    const debt = await prisma.debt.findFirst({
 
       where: {
-        id
+
+        id,
+
+        deletedAt: null
+
       },
 
       include: {
-
-        payments: {
-
-          orderBy: {
-            paymentDate: 'desc'
-          }
-
-        }
-
+        payments: true
       }
 
     });
@@ -281,6 +273,44 @@ async function updateDebt(req, res) {
 
 }
 
+async function deleteDebt(req, res) {
+
+  try {
+
+    const id =
+      parseInt(req.params.id);
+
+    await prisma.debt.update({
+
+      where: {
+        id
+      },
+
+      data: {
+
+        deletedAt:
+          new Date()
+
+      }
+
+    });
+
+    return res.json({
+      message: 'Dívida arquivada'
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      message: 'Erro ao arquivar dívida'
+    });
+
+  }
+
+}
+
 module.exports = {
 
   createDebt,
@@ -289,6 +319,8 @@ module.exports = {
 
   getDebt,
 
-  updateDebt
+  updateDebt,
+
+  deleteDebt
 
 };
