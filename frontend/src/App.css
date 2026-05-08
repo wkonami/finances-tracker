@@ -570,6 +570,40 @@ textarea:focus {
 
 }
 
+.status-open,
+.status-closed {
+
+  display: inline-block;
+
+  margin-top: 10px;
+  margin-bottom: 20px;
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+}
+
+.status-open {
+
+  background: rgba(192, 57, 43, 0.12);
+
+  color: var(--color-danger);
+
+}
+
+.status-closed {
+
+  background: rgba(31, 138, 76, 0.12);
+
+  color: var(--color-success);
+
+}
+
 /* =========================================================
    RESPONSIVE
 ========================================================= */
