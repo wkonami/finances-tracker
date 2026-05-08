@@ -395,6 +395,15 @@ export default function DebtDetails() {
         }
 
         <button
+          className="button danger-button"
+          onClick={deleteCurrentDebt}
+        >
+
+          Arquivar dívida
+
+        </button>
+
+        <button
           className="button"
           onClick={() =>
 
