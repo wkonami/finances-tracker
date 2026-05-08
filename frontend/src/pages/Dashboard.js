@@ -214,21 +214,20 @@ export default function Dashboard() {
 
                               {debt.debtorName}
 
+                              {
+
+                                debt.notes && (
+
+                                  <div className="debt-note">
+
+                                    {debt.notes}
+
+                                  </div>
+
+                                )
+
+                              }
                             </Link>
-
-                            {
-
-                              debt.notes && (
-
-                                <div className="debt-note">
-
-                                  {debt.notes}
-
-                                </div>
-
-                              )
-
-                            }
 
                           </div>
 
