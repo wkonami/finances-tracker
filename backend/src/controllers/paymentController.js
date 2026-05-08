@@ -110,6 +110,124 @@ async function addPayment(req, res) {
 
 }
 
+async function updatePayment(req, res) {
+
+  try {
+
+    const paymentId =
+      parseInt(req.params.paymentId);
+
+    const {
+      amount,
+      paymentDate,
+      note
+    } = req.body;
+
+    const existingPayment =
+      await prisma.payment.findUnique({
+
+        where: {
+          id: paymentId
+        },
+
+        include: {
+          debt: {
+            include: {
+              payments: true
+            }
+          }
+        }
+
+      });
+
+    if (!existingPayment) {
+
+      return res.status(404).json({
+        message: 'Pagamento não encontrado'
+      });
+
+    }
+
+    const debt =
+      existingPayment.debt;
+
+    const otherPaymentsTotal =
+      debt.payments.reduce(
+
+        (sum, payment) => {
+
+          if (
+            payment.id === paymentId
+          ) {
+            return sum;
+          }
+
+          return (
+            sum + Number(payment.amount)
+          );
+
+        },
+
+        0
+
+      );
+
+    const futureTotal =
+      otherPaymentsTotal +
+      Number(amount);
+
+    if (
+
+      futureTotal >
+
+      Number(debt.totalAmount) + 0.01
+
+    ) {
+
+      return res.status(400).json({
+
+        message:
+          'Pagamento ultrapassa o valor total da dívida'
+
+      });
+
+    }
+
+    const updatedPayment =
+      await prisma.payment.update({
+
+        where: {
+          id: paymentId
+        },
+
+        data: {
+
+          amount:
+            parseFloat(amount),
+
+          paymentDate:
+            new Date(paymentDate),
+
+          note
+
+        }
+
+      });
+
+    return res.json(updatedPayment);
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      message: 'Erro ao atualizar pagamento'
+    });
+
+  }
+
+}
+
 async function listPayments(req, res) {
 
   try {
@@ -146,5 +264,6 @@ async function listPayments(req, res) {
 
 module.exports = {
   addPayment,
-  listPayments
+  listPayments,
+  updatePayment
 };
