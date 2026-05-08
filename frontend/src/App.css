@@ -604,6 +604,16 @@ textarea:focus {
 
 }
 
+.details-actions {
+
+  display: flex;
+
+  gap: 12px;
+
+  margin-top: 20px;
+
+}
+
 .danger-button {
 
   background: #c0392b;

@@ -64,35 +64,6 @@ export default function Dashboard() {
 
   }, [loadDebts]);
 
-  async function deleteDebt(id) {
-
-    const confirmed =
-      window.confirm(
-        'Deseja arquivar esta dívida?'
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-
-      await api.delete(`/debts/${id}`);
-
-      await loadDebts();
-
-    } catch (error) {
-
-      console.error(error);
-
-      alert(
-        'Erro ao arquivar dívida'
-      );
-
-    }
-
-  }
-
   return (
 
     <div className="container">
