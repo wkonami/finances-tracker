@@ -65,7 +65,8 @@ async function createDebt(req, res) {
 
 
 async function listDebts(req, res) {
-
+  console.log("USER NO CONTROLLER:");
+  console.log(req.user);
   try {
 
 
