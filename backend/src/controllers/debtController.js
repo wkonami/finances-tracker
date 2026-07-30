@@ -1,5 +1,6 @@
 const prisma = require('../prismaClient');
 
+
 async function createDebt(req, res) {
 
   try {
@@ -10,302 +11,473 @@ async function createDebt(req, res) {
       notes
     } = req.body;
 
+
     if (!debtorName || totalAmount == null) {
 
       return res.status(400).json({
-        message: 'Nome do devedor e valor são obrigatórios'
+
+        message:
+          'Nome do devedor e valor são obrigatórios'
+
       });
 
     }
 
+
     const debt = await prisma.debt.create({
 
       data: {
+
         debtorName,
-        totalAmount: parseFloat(totalAmount),
+
+        totalAmount:
+          parseFloat(totalAmount),
+
         notes,
-        userId: req.user.id
+
+        userId:
+          req.user.userId
+
       }
 
     });
 
+
     res.json(debt);
+
 
   } catch (error) {
 
     console.error(error);
 
+
     res.status(500).json({
-      message: 'Erro ao criar dívida'
+
+      message:
+        'Erro ao criar dívida'
+
     });
 
   }
 
 }
+
+
 
 async function listDebts(req, res) {
 
   try {
 
-    const debts = await prisma.debt.findMany({
 
-      where: {
-        userId: req.user.id,
-        deletedAt: null
-      },
+    const debts =
+      await prisma.debt.findMany({
 
-      include: {
-        payments: true
-      },
+        where: {
 
-      orderBy: {
-        createdAt: 'desc'
-      }
+          userId:
+            req.user.userId,
 
-    });
-
-    const formattedDebts = debts.map((debt) => {
-
-      const totalPaid = debt.payments.reduce(
-
-        (sum, payment) => {
-
-          return sum + parseFloat(payment.amount);
+          deletedAt:
+            null
 
         },
+
+
+        include: {
+
+          payments:true
+
+        },
+
+
+        orderBy: {
+
+          createdAt:'desc'
+
+        }
+
+
+      });
+
+
+
+    const formattedDebts =
+      debts.map((debt)=>{
+
+
+        const totalPaid =
+          debt.payments.reduce(
+
+            (sum,payment)=>
+
+              sum +
+              Number(payment.amount),
+
+            0
+
+          );
+
+
+        const totalOpen =
+          Number(debt.totalAmount)
+          -
+          totalPaid;
+
+
+
+        return {
+
+          ...debt,
+
+          totalPaid,
+
+          totalOpen,
+
+          isClosed:
+            totalOpen <= 0
+
+        };
+
+
+      });
+
+
+
+    const openDebts =
+      formattedDebts.filter(
+
+        debt =>
+          !debt.isClosed
+
+      );
+
+
+    const closedDebts =
+      formattedDebts.filter(
+
+        debt =>
+          debt.isClosed
+
+      );
+
+
+
+    const totalOpen =
+      openDebts.reduce(
+
+        (sum,debt)=>
+
+          sum +
+          debt.totalOpen,
 
         0
 
       );
 
-      const totalOpen =
 
-        parseFloat(debt.totalAmount) - totalPaid;
 
-      return {
+    const totalPaid =
+      formattedDebts.reduce(
 
-        ...debt,
+        (sum,debt)=>
 
-        totalPaid,
+          sum +
+          debt.totalPaid,
 
-        totalOpen,
+        0
 
-        isClosed: totalOpen <= 0
+      );
 
-      };
 
-    });
-
-    const openDebts = formattedDebts.filter(
-
-      debt => !debt.isClosed
-
-    );
-
-    const closedDebts = formattedDebts.filter(
-
-      debt => debt.isClosed
-
-    );
-
-    const totalOpen = openDebts.reduce(
-
-      (sum, debt) => sum + debt.totalOpen,
-
-      0
-
-    );
-
-    const totalPaid = formattedDebts.reduce(
-
-      (sum, debt) => sum + debt.totalPaid,
-
-      0
-
-    );
 
     res.json({
 
-      summary: {
+      summary:{
 
         totalOpen,
 
         totalPaid,
 
-        openCount: openDebts.length,
+        openCount:
+          openDebts.length,
 
-        closedCount: closedDebts.length
+        closedCount:
+          closedDebts.length
 
       },
 
-      debts: openDebts,
+
+      debts:
+        openDebts,
+
 
       closedDebts
 
     });
 
-  } catch (error) {
+
+
+  } catch(error){
+
 
     console.error(error);
 
+
     res.status(500).json({
 
-      message: 'Erro ao listar dívidas'
+      message:
+        'Erro ao listar dívidas'
 
     });
+
 
   }
 
 }
 
-async function getDebt(req, res) {
+
+
+
+async function getDebt(req,res){
 
   try {
 
-    const id = parseInt(req.params.id);
 
-    const debt = await prisma.debt.findFirst({
+    const id =
+      parseInt(req.params.id);
 
-      where: {
-        id,
-        userId: req.user.id,
-        deletedAt: null
-      },
 
-      include: {
-        payments: true
-      }
 
-    });
+    const debt =
+      await prisma.debt.findFirst({
 
-    if (!debt) {
+
+        where:{
+
+          id,
+
+
+          userId:
+            req.user.userId,
+
+
+          deletedAt:
+            null
+
+        },
+
+
+        include:{
+
+          payments:true
+
+        }
+
+
+      });
+
+
+
+    if(!debt){
 
       return res.status(404).json({
-        message: 'Dívida não encontrada'
+
+        message:
+          'Dívida não encontrada'
+
       });
 
     }
 
-    const totalPaid = debt.payments.reduce(
 
-      (sum, payment) => {
 
-        return sum + parseFloat(payment.amount);
+    const totalPaid =
+      debt.payments.reduce(
 
-      },
+        (sum,payment)=>
 
-      0
+          sum +
+          Number(payment.amount),
 
-    );
+        0
+
+      );
+
+
 
     res.json({
 
       ...debt,
 
+
       totalPaid,
+
 
       totalOpen:
 
-        parseFloat(debt.totalAmount) - totalPaid
+        Number(debt.totalAmount)
+        -
+        totalPaid
+
 
     });
 
-  } catch (error) {
+
+
+  }catch(error){
+
 
     console.error(error);
 
+
     res.status(500).json({
-      message: 'Erro ao buscar dívida'
+
+      message:
+        'Erro ao buscar dívida'
+
     });
+
 
   }
 
 }
 
-async function updateDebt(req, res) {
+
+
+
+async function updateDebt(req,res){
 
   try {
 
-    const id = parseInt(req.params.id);
+
+    const id =
+      parseInt(req.params.id);
+
+
 
     const {
       totalAmount,
       notes
     } = req.body;
 
-    const updated = await prisma.debt.update({
 
-      where: {
-        id
-      },
 
-      data: {
+    const updated =
+      await prisma.debt.update({
 
-        totalAmount:
+        where:{
 
-          totalAmount !== undefined
+          id
+
+        },
+
+
+        data:{
+
+
+          totalAmount:
+
+            totalAmount !== undefined
 
             ? parseFloat(totalAmount)
 
             : undefined,
 
-        notes
 
-      }
+          notes
 
-    });
+
+        }
+
+
+      });
+
+
 
     res.json(updated);
 
-  } catch (error) {
+
+
+  }catch(error){
+
 
     console.error(error);
 
+
     res.status(500).json({
-      message: 'Erro ao atualizar dívida'
+
+      message:
+        'Erro ao atualizar dívida'
+
     });
+
 
   }
 
 }
 
-async function deleteDebt(req, res) {
+
+
+
+async function deleteDebt(req,res){
 
   try {
+
 
     const id =
       parseInt(req.params.id);
 
+
+
     await prisma.debt.update({
 
-      where: {
+      where:{
+
         id
+
       },
 
-      data: {
+
+      data:{
 
         deletedAt:
           new Date()
 
       }
 
+
     });
 
-    return res.json({
-      message: 'Dívida arquivada'
+
+
+    res.json({
+
+      message:
+        'Dívida arquivada'
+
     });
 
-  } catch (error) {
+
+
+  }catch(error){
+
 
     console.error(error);
 
-    return res.status(500).json({
-      message: 'Erro ao arquivar dívida'
+
+    res.status(500).json({
+
+      message:
+        'Erro ao arquivar dívida'
+
     });
+
 
   }
 
 }
+
+
 
 module.exports = {
 
