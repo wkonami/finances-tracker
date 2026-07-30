@@ -829,6 +829,74 @@ textarea:focus {
   font-size: 14px;
 }
 
+.users-table {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  margin-top: 20px;
+
+}
+
+.users-table th {
+
+  text-align: left;
+
+  padding: 14px;
+
+  background: var(--color-primary);
+
+  color: white;
+
+}
+
+.users-table td {
+
+  padding: 14px;
+
+  border-bottom: 1px solid var(--color-border);
+
+}
+
+.users-table tr:hover {
+
+  background: rgba(0,0,0,.03);
+
+}
+
+.users-table button {
+
+  margin-right: 8px;
+
+}
+
+select {
+
+  width: 100%;
+
+  padding: 12px;
+
+  border: 1px solid var(--color-border);
+
+  border-radius: var(--radius-md);
+
+  background: white;
+
+  font-size: 14px;
+
+}
+
+select:focus {
+
+  outline: none;
+
+  border-color: var(--color-primary);
+
+  box-shadow: 0 0 0 3px rgba(31,60,136,.12);
+
+}
+
 @media (max-width: 768px) {
 
   .top-bar {
