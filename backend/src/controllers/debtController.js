@@ -69,9 +69,8 @@ async function listDebts(req, res) {
   console.log(req.user);
   try {
 
-
+    console.log("Filtrando por userId:", req.user.id);
     const debts =
-      console.log("Filtrando por userId:", req.user.id);
       await prisma.debt.findMany({
 
         where: {
