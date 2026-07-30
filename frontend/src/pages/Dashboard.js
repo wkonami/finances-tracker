@@ -5,7 +5,8 @@ import React, {
 } from 'react';
 
 import {
-  Link
+  Link,
+  useNavigate
 } from 'react-router-dom';
 
 import api from '../services/api';
@@ -13,6 +14,8 @@ import api from '../services/api';
 import '../App.css';
 
 export default function Dashboard() {
+
+  const navigate = useNavigate();
 
   const [summary, setSummary] =
     useState(null);
@@ -25,6 +28,22 @@ export default function Dashboard() {
 
   const [activeTab, setActiveTab] =
     useState('open');
+
+  const role =
+    localStorage.getItem('role');
+
+  const username =
+    localStorage.getItem('username');
+
+  function logout() {
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('username');
+
+    navigate('/');
+
+  }
 
   const loadDebts =
     useCallback(async () => {
@@ -68,9 +87,45 @@ export default function Dashboard() {
 
     <div className="container">
 
-      <h1 className="title">
-        Rastreador de Finanças
-      </h1>
+      <div className="top-bar">
+
+        <div>
+
+          <h1 className="title">
+            Rastreador de Finanças
+          </h1>
+
+          <div className="logged-user">
+
+            Usuário:
+            {' '}
+            <strong>
+              {username}
+            </strong>
+
+            {' • '}
+
+            Perfil:
+            {' '}
+
+            <strong>
+              {role}
+            </strong>
+
+          </div>
+
+        </div>
+
+        <button
+          className="button button-secondary"
+          onClick={logout}
+        >
+
+          Sair
+
+        </button>
+
+      </div>
 
       {
 
@@ -78,49 +133,55 @@ export default function Dashboard() {
 
           <div className="summary-box">
 
-            <div>
+            <div className="summary-item">
 
-              <strong>
-                Total em aberto:
-              </strong>
+              <div className="summary-label">
+                Total em aberto
+              </div>
 
-              {' '}
+              <div className="summary-value">
 
-              R$
+                R$
 
-              {' '}
+                {' '}
 
-              {
+                {
 
-                Number(
-                  summary.totalOpen
-                ).toFixed(2)
+                  Number(
+                    summary.totalOpen
+                  ).toFixed(2)
 
-              }
+                }
 
-            </div>
-
-            <div>
-
-              <strong>
-                Dívidas abertas:
-              </strong>
-
-              {' '}
-
-              {summary.openCount}
+              </div>
 
             </div>
 
-            <div>
+            <div className="summary-item">
 
-              <strong>
-                Dívidas quitadas:
-              </strong>
+              <div className="summary-label">
+                Dívidas abertas
+              </div>
 
-              {' '}
+              <div className="summary-value">
 
-              {summary.closedCount}
+                {summary.openCount}
+
+              </div>
+
+            </div>
+
+            <div className="summary-item">
+
+              <div className="summary-label">
+                Dívidas quitadas
+              </div>
+
+              <div className="summary-value">
+
+                {summary.closedCount}
+
+              </div>
 
             </div>
 
@@ -168,6 +229,24 @@ export default function Dashboard() {
 
         </Link>
 
+        {
+
+          role === 'ADMIN' && (
+
+            <Link to="/users">
+
+              <button className="button">
+
+                Usuários
+
+              </button>
+
+            </Link>
+
+          )
+
+        }
+
       </div>
 
       {
@@ -177,7 +256,9 @@ export default function Dashboard() {
           <div className="debts-section">
 
             <h2>
+
               Em aberto
+
             </h2>
 
             {
@@ -187,7 +268,9 @@ export default function Dashboard() {
                 ? (
 
                   <p>
+
                     Nenhuma dívida em aberto.
+
                   </p>
 
                 )
@@ -214,20 +297,21 @@ export default function Dashboard() {
 
                               {debt.debtorName}
 
-                              {
-
-                                debt.notes && (
-
-                                  <div className="debt-note">
-
-                                    {debt.notes}
-
-                                  </div>
-
-                                )
-
-                              }
                             </Link>
+
+                            {
+
+                              debt.notes && (
+
+                                <div className="debt-note">
+
+                                  {debt.notes}
+
+                                </div>
+
+                              )
+
+                            }
 
                           </div>
 
@@ -276,7 +360,9 @@ export default function Dashboard() {
           <div className="debts-section">
 
             <h2>
+
               Quitadas
+
             </h2>
 
             {
@@ -286,7 +372,9 @@ export default function Dashboard() {
                 ? (
 
                   <p>
+
                     Nenhuma dívida quitada.
+
                   </p>
 
                 )
