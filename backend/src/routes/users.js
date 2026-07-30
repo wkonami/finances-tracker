@@ -3,8 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const authMiddleware = require('../middlewares/authMiddleware');
-
-const roleMiddleware = require('../middlewares/role');
+const authorize = require('../middlewares/authorize');
 
 const userController = require('../controllers/userController');
 
@@ -12,31 +11,31 @@ router.use(authMiddleware);
 
 router.get(
   '/',
-  roleMiddleware('ADMIN'),
+  authorize('ADMIN'),
   userController.listUsers
 );
 
 router.get(
   '/:id',
-  roleMiddleware('ADMIN'),
+  authorize('ADMIN'),
   userController.getUser
 );
 
 router.post(
   '/',
-  roleMiddleware('ADMIN'),
+  authorize('ADMIN'),
   userController.createUser
 );
 
 router.put(
   '/:id',
-  roleMiddleware('ADMIN'),
+  authorize('ADMIN'),
   userController.updateUser
 );
 
 router.delete(
   '/:id',
-  roleMiddleware('ADMIN'),
+  authorize('ADMIN'),
   userController.deleteUser
 );
 
