@@ -5,17 +5,71 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'mudar_ja';
 
 async function login(req, res) {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ message: 'Missing' });
+  try {
+    const { username, password } = req.body;
 
-  const user = await prisma.user.findUnique({ where: { username } });
-  if (!user) return res.status(401).json({ message: 'Invalid' });
+    if (!username || !password) {
+      return res.status(400).json({
+        message: 'Usuário e senha são obrigatórios'
+      });
+    }
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ message: 'Invalid' });
+    const user = await prisma.user.findFirst({
+      where: {
+        username,
+        deletedAt: null
+      }
+    });
 
-  const token = jwt.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
-  res.json({ token });
+    if (!user) {
+      return res.status(401).json({
+        message: 'Usuário ou senha inválidos'
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        message: 'Usuário ou senha inválidos'
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        username: user.username,
+        role: user.role
+      },
+      JWT_SECRET,
+      {
+        expiresIn: '8h'
+      }
+    );
+
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      message: 'Erro interno no servidor'
+    });
+
+  }
 }
 
-module.exports = { login };
+module.exports = {
+  login
+};

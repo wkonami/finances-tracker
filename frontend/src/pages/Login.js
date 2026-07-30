@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
-import api from '../services/api';
-
 import { useNavigate } from 'react-router-dom';
+
+import api from '../services/api';
 
 import '../App.css';
 
@@ -12,15 +12,27 @@ export default function Login() {
 
   const [password, setPassword] = useState('');
 
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
 
     e.preventDefault();
 
+    if (!username.trim() || !password.trim()) {
+
+      alert('Informe usuário e senha.');
+
+      return;
+
+    }
+
+    setLoading(true);
+
     try {
 
-      const { data } = await api.post(
+      const response = await api.post(
         '/auth/login',
         {
           username,
@@ -28,17 +40,71 @@ export default function Login() {
         }
       );
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.user.role);
-      localStorage.setItem('username', data.user.username);
+      const { token, user } = response.data;
 
-      navigate('/dashboard');
+      if (!token) {
 
-    } catch (err) {
+        throw new Error('Token não recebido.');
 
-      console.error(err);
+      }
 
-      alert('Erro no login');
+      localStorage.setItem(
+        'token',
+        token
+      );
+
+      if (user) {
+
+        localStorage.setItem(
+          'userId',
+          String(user.id)
+        );
+
+        localStorage.setItem(
+          'username',
+          user.username
+        );
+
+        localStorage.setItem(
+          'role',
+          user.role
+        );
+
+      } else {
+
+        // Compatibilidade caso o backend antigo
+        // retorne apenas o token.
+        localStorage.removeItem('userId');
+
+        localStorage.removeItem('username');
+
+        localStorage.setItem(
+          'role',
+          'USER'
+        );
+
+      }
+
+      navigate(
+        '/dashboard',
+        {
+          replace: true
+        }
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      const message =
+        error.response?.data?.message ||
+        'Usuário ou senha inválidos.';
+
+      alert(message);
+
+    } finally {
+
+      setLoading(false);
 
     }
 
@@ -50,9 +116,17 @@ export default function Login() {
 
       <div className="login-box">
 
-        <h2>
-          Login
-        </h2>
+        <h1 className="title">
+
+          Kaname Finances
+
+        </h1>
+
+        <p className="login-subtitle">
+
+          Entre para acessar seus créditos.
+
+        </p>
 
         <form
           className="login-form"
@@ -60,11 +134,15 @@ export default function Login() {
         >
 
           <input
+            type="text"
             placeholder="Usuário"
+            autoComplete="username"
             value={username}
             onChange={(e) =>
 
-              setUsername(e.target.value)
+              setUsername(
+                e.target.value
+              )
 
             }
           />
@@ -72,10 +150,13 @@ export default function Login() {
           <input
             type="password"
             placeholder="Senha"
+            autoComplete="current-password"
             value={password}
             onChange={(e) =>
 
-              setPassword(e.target.value)
+              setPassword(
+                e.target.value
+              )
 
             }
           />
@@ -83,9 +164,16 @@ export default function Login() {
           <button
             className="button"
             type="submit"
+            disabled={loading}
           >
 
-            Entrar
+            {
+
+              loading
+                ? 'Entrando...'
+                : 'Entrar'
+
+            }
 
           </button>
 
