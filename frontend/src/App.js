@@ -16,6 +16,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NewDebt from './pages/NewDebt';
 import DebtDetails from './pages/DebtDetails';
+import Users from './pages/Users';
 
 import './App.css';
 
@@ -26,6 +27,27 @@ function PrivateRoute({ children }) {
   if (!token) {
 
     return <Navigate to="/" replace />;
+
+  }
+
+  return children;
+
+}
+
+function AdminRoute({ children }) {
+
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  if (!token) {
+
+    return <Navigate to="/" replace />;
+
+  }
+
+  if (role !== 'ADMIN') {
+
+    return <Navigate to="/dashboard" replace />;
 
   }
 
@@ -120,6 +142,15 @@ export default function App() {
             <PrivateRoute>
               <DebtDetails />
             </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/users"
+          element={
+            <AdminRoute>
+              <Users />
+            </AdminRoute>
           }
         />
 

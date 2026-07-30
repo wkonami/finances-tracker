@@ -1,0 +1,12 @@
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'MANAGER', 'USER');
+
+-- AlterTable
+ALTER TABLE "Debt" ADD COLUMN     "userId" INTEGER;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "role" "Role" NOT NULL DEFAULT 'USER';
+
+-- AddForeignKey
+ALTER TABLE "Debt" ADD CONSTRAINT "Debt_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

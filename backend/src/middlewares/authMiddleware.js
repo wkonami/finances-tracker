@@ -1,23 +1,45 @@
 const jwt = require('jsonwebtoken');
+
 const JWT_SECRET = process.env.JWT_SECRET || 'mudar_ja';
 
 function authMiddleware(req, res, next) {
+
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ message: 'No token' });
 
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2) return res.status(401).json({ message: 'Token error' });
+  if (!authHeader) {
+    return res.status(401).json({
+      message: 'Token não informado'
+    });
+  }
 
-  const [scheme, token] = parts;
-  if (!/^Bearer$/i.test(scheme)) return res.status(401).json({ message: 'Token malformatted' });
+  const [scheme, token] = authHeader.split(' ');
+
+  if (scheme !== 'Bearer' || !token) {
+    return res.status(401).json({
+      message: 'Token inválido'
+    });
+  }
 
   try {
+
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    return next();
-  } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
+
+    req.user = {
+      id: decoded.id,
+      username: decoded.username,
+      role: decoded.role
+    };
+
+    next();
+
+  } catch (error) {
+
+    return res.status(401).json({
+      message: 'Token expirado ou inválido'
+    });
+
   }
+
 }
 
 module.exports = authMiddleware;

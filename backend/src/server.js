@@ -10,6 +10,8 @@ const authRoutes = require('./routes/auth');
 
 const debtRoutes = require('./routes/debts');
 
+const userRoutes = require('./routes/users');
+
 const FRONTEND_ORIGIN =
   process.env.FRONTEND_ORIGIN ||
   'http://localhost:3000';
@@ -36,6 +38,8 @@ app.get('/health', (req, res) => {
 app.use('/auth', authRoutes);
 
 app.use('/debts', debtRoutes);
+
+app.use('/users', userRoutes);
 
 app.use((req, res) => {
 

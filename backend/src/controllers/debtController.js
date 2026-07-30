@@ -21,13 +21,10 @@ async function createDebt(req, res) {
     const debt = await prisma.debt.create({
 
       data: {
-
         debtorName,
-
         totalAmount: parseFloat(totalAmount),
-
-        notes
-
+        notes,
+        userId: req.user.id
       }
 
     });
@@ -53,6 +50,7 @@ async function listDebts(req, res) {
     const debts = await prisma.debt.findMany({
 
       where: {
+        userId: req.user.id,
         deletedAt: null
       },
 
@@ -169,11 +167,9 @@ async function getDebt(req, res) {
     const debt = await prisma.debt.findFirst({
 
       where: {
-
         id,
-
+        userId: req.user.id,
         deletedAt: null
-
       },
 
       include: {

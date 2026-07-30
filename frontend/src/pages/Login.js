@@ -28,10 +28,9 @@ export default function Login() {
         }
       );
 
-      localStorage.setItem(
-        'token',
-        data.token
-      );
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.user.role);
+      localStorage.setItem('username', data.user.username);
 
       navigate('/dashboard');
 
