@@ -92,6 +92,12 @@ export default function DebtDetails() {
 
   }, [fetchDebt]);
 
+  useEffect(() => {
+    if (debt && Number(debt.totalOpen) > 0) {
+      setAmount(Number(debt.totalOpen).toFixed(2));
+    }
+  }, [debt]);
+
   async function deleteCurrentDebt() {
 
     const confirmed = window.confirm(
@@ -139,8 +145,6 @@ export default function DebtDetails() {
         note
 
       });
-
-      setAmount('');
 
       setPaymentDate(getTodayLocal());
 
