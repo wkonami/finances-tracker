@@ -96,22 +96,12 @@ export default function Dashboard() {
           </h1>
 
           <div className="logged-user">
-
-            Usuário:
-            {' '}
             <strong>
-              {username}
+              {username}<br></br>
             </strong>
-
-            {' • '}
-
-            Perfil:
-            {' '}
-
             <strong>
               {role}
             </strong>
-
           </div>
 
         </div>
@@ -160,7 +150,7 @@ export default function Dashboard() {
             <div className="summary-item">
 
               <div className="summary-label">
-                Dívidas abertas
+                Pedidos abertos
               </div>
 
               <div className="summary-value">
@@ -174,7 +164,7 @@ export default function Dashboard() {
             <div className="summary-item">
 
               <div className="summary-label">
-                Dívidas quitadas
+                Pedidos finalizados
               </div>
 
               <div className="summary-value">

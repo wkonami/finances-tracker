@@ -40,8 +40,6 @@ async function listDebts(req, res) {
 
   try {
 
-    console.log('Usuário autenticado:', req.user);
-
     const debts = await prisma.debt.findMany({
 
       where: {
@@ -58,14 +56,6 @@ async function listDebts(req, res) {
       }
 
     });
-
-    console.log(
-      debts.map(d => ({
-        id: d.id,
-        userId: d.userId,
-        nome: d.debtorName
-      }))
-    );
 
     const formattedDebts = debts.map((debt) => {
 

@@ -13,6 +13,18 @@ import {
 
 import '../App.css';
 
+function getTodayLocal() {
+  const today = new Date();
+
+  const offset = today.getTimezoneOffset();
+
+  const localDate = new Date(
+    today.getTime() - offset * 60 * 1000
+  );
+
+  return localDate.toISOString().split('T')[0];
+}
+
 export default function DebtDetails() {
 
   const { id } = useParams();
@@ -23,7 +35,9 @@ export default function DebtDetails() {
 
   const [amount, setAmount] = useState('');
 
-  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentDate, setPaymentDate] = useState(
+    getTodayLocal()
+  );
 
   const [note, setNote] = useState('');
 
@@ -34,6 +48,25 @@ export default function DebtDetails() {
   const [editPaymentDate, setEditPaymentDate] = useState('');
 
   const [editNote, setEditNote] = useState('');
+
+    const quickItems = [
+    'Colar',
+    'Pulseira',
+    'Brinco',
+    'Enfeite de Cabelo'
+  ];
+
+  function addPaymentNote(item) {
+    setNote((prev) =>
+      prev.trim() === '' ? item : `${prev}\n${item}`
+    );
+  }
+
+  function addEditNote(item) {
+    setEditNote((prev) =>
+      prev.trim() === '' ? item : `${prev}\n${item}`
+    );
+  }  
 
   const fetchDebt = useCallback(async () => {
 
@@ -109,7 +142,7 @@ export default function DebtDetails() {
 
       setAmount('');
 
-      setPaymentDate('');
+      setPaymentDate(getTodayLocal());
 
       setNote('');
 
@@ -229,10 +262,19 @@ export default function DebtDetails() {
     Number(debt.totalOpen) <= 0;
 
   return (
-
+    
     <div className="details-container">
 
       <div className="details-card">
+
+        <button
+          className="button"
+          onClick={() =>
+            navigate('/dashboard')
+          }
+        >
+          Voltar
+        </button>
 
         <div className="details-header">
 
@@ -389,15 +431,24 @@ export default function DebtDetails() {
                   }
                 />
 
+                <div className="quick-items">
+                  {quickItems.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="quick-item-button"
+                      onClick={() => addPaymentNote(item)}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+
                 <textarea
                   className="textarea"
                   placeholder="Observação do pagamento"
                   value={note}
-                  onChange={(e) =>
-                    setNote(
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => setNote(e.target.value)}
                 />
 
                 <button
@@ -488,15 +539,24 @@ export default function DebtDetails() {
                                 }
                               />
 
+                              <div className="quick-items">
+                                {quickItems.map((item) => (
+                                  <button
+                                    key={item}
+                                    type="button"
+                                    className="quick-item-button"
+                                    onClick={() => addEditNote(item)}
+                                  >
+                                    {item}
+                                  </button>
+                                ))}
+                              </div>
+
                               <textarea
                                 className="textarea"
                                 value={editNote}
                                 onChange={(e) =>
-
-                                  setEditNote(
-                                    e.target.value
-                                  )
-
+                                  setEditNote(e.target.value)
                                 }
                               />
 
@@ -665,16 +725,7 @@ export default function DebtDetails() {
 
           </button>
 
-          <button
-            className="button"
-            onClick={() =>
-              navigate('/dashboard')
-            }
-          >
 
-            Voltar
-
-          </button>
 
         </div>
 

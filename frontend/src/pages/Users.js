@@ -6,6 +6,8 @@ import React, {
 
 import api from '../services/api';
 
+import { useNavigate } from 'react-router-dom';
+
 import '../App.css';
 
 export default function Users() {
@@ -19,6 +21,8 @@ export default function Users() {
   const [password, setPassword] = useState('');
 
   const [role, setRole] = useState('USER');
+
+  const navigate = useNavigate();
 
   const loadUsers = useCallback(async () => {
 
@@ -157,7 +161,12 @@ export default function Users() {
   return (
 
     <div className="container">
-
+      <button
+        className="button"
+        onClick={() => navigate('/dashboard')}
+      >
+        Home
+      </button>
       <h1 className="title">
 
         Manutenção de Usuários

@@ -35,11 +35,11 @@ app.get('/health', (req, res) => {
 
 });
 
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 
-app.use('/debts', debtRoutes);
+app.use('/api/debts', debtRoutes);
 
-app.use('/users', userRoutes);
+app.use('/api/users', userRoutes);
 
 app.use((req, res) => {
 
