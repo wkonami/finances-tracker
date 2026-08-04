@@ -398,7 +398,7 @@ export default function Users() {
                           {' '}
 
                           <button
-                            className="button danger-button"
+                            className="button danger"
                             onClick={() =>
 
                               deleteUser(user.id)

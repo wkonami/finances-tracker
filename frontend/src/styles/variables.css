@@ -1,0 +1,34 @@
+:root{
+    --color-background:#f5f7fb;
+
+    --color-surface:#ffffff;
+    --color-surface-hover:#f8fafc;
+
+    --color-primary:#9cb412;
+    --color-primary-hover:#82960f;
+    --color-primary-light:rgba(156,180,18,.15);
+
+    --color-success:#1f8a4c;
+    --color-success-light:rgba(31,138,76,.15);
+
+    --color-danger:#c0392b;
+    --color-danger-light:rgba(192,57,43,.15);
+
+    --color-text:#1f2937;
+    --color-text-secondary:#64748b;
+
+    --color-border:#dbe3ea;
+
+    --shadow-sm:0 2px 6px rgb(15 23 42 /.05);
+    --shadow-md:0 4px 16px rgb(15 23 42 /.08);
+    --shadow-lg:0 10px 28px rgb(15 23 42 /.12);
+
+    --radius-sm:8px;
+    --radius-md:12px;
+    --radius-lg:18px;
+
+    /* compatibilidade */
+    --radius:14px;
+
+    --transition:.25s ease;
+}

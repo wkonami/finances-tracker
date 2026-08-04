@@ -256,7 +256,9 @@ export default function DebtDetails() {
 
     return (
       <div className="loading-container">
-        Carregando...
+        <div className="card loading-box">
+            Carregando...
+        </div>
       </div>
     );
 
@@ -269,10 +271,10 @@ export default function DebtDetails() {
     
     <div className="details-container">
 
-      <div className="details-card">
+      <div className="details-card card">
 
         <button
-          className="button"
+          className="button secondary"
           onClick={() =>
             navigate('/dashboard')
           }
@@ -280,7 +282,7 @@ export default function DebtDetails() {
           Voltar
         </button>
 
-        <div className="details-header">
+        <header className="details-header">
 
           <div>
 
@@ -307,8 +309,8 @@ export default function DebtDetails() {
           <div
             className={
               isClosed
-                ? 'status-badge closed'
-                : 'status-badge open'
+                ? 'badge success'
+                : 'badge danger'
             }
           >
 
@@ -322,11 +324,11 @@ export default function DebtDetails() {
 
           </div>
 
-        </div>
+        </header>
 
-        <div className="details-summary-grid">
+        <section className="details-summary-grid">
 
-          <div className="summary-card">
+          <div className="summary-card card">
 
             <span className="summary-label">
               Valor total
@@ -349,7 +351,7 @@ export default function DebtDetails() {
 
           </div>
 
-          <div className="summary-card">
+          <div className="summary-card card">
 
             <span className="summary-label">
               Valor pago
@@ -372,7 +374,7 @@ export default function DebtDetails() {
 
           </div>
 
-          <div className="summary-card">
+          <div className="summary-card card">
 
             <span className="summary-label">
               Em aberto
@@ -395,7 +397,7 @@ export default function DebtDetails() {
 
           </div>
 
-        </div>
+        </section>
 
         {
 
@@ -409,10 +411,16 @@ export default function DebtDetails() {
                 Adicionar pagamento
               </h3>
 
-              <div className="payment-form">
+              <form
+                  className="payment-form"
+                  onSubmit={(e)=>{
+                      e.preventDefault();
+                      addPayment();
+                  }}
+              >
 
                 <input
-                  className="input"
+                  className="field"
                   type="number"
                   step="0.01"
                   placeholder="Valor"
@@ -425,7 +433,7 @@ export default function DebtDetails() {
                 />
 
                 <input
-                  className="input"
+                  className="field"
                   type="date"
                   value={paymentDate}
                   onChange={(e) =>
@@ -449,22 +457,20 @@ export default function DebtDetails() {
                 </div>
 
                 <textarea
-                  className="textarea"
+                  className="field"
                   placeholder="Observação do pagamento"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
 
                 <button
+                  type="submit"
                   className="button"
-                  onClick={addPayment}
                 >
-
                   Adicionar pagamento
-
                 </button>
 
-              </div>
+              </form>
 
             </>
 
@@ -494,7 +500,7 @@ export default function DebtDetails() {
 
             : (
 
-              <ul className="payment-list">
+              <ul className="list payment-list">
 
                 {
 
@@ -507,17 +513,23 @@ export default function DebtDetails() {
 
                       <li
                         key={payment.id}
-                        className="payment-item"
+                        className="payment-item card"
                       >
 
                         {
 
                           isEditing ? (
 
-                            <div className="payment-edit-form">
+                            <form
+                                className="payment-edit-form"
+                                onSubmit={(e)=>{
+                                    e.preventDefault();
+                                    saveEdit(payment.id);
+                                }}
+                            >
 
                               <input
-                                className="input"
+                                className="field"
                                 type="number"
                                 step="0.01"
                                 value={editAmount}
@@ -531,7 +543,7 @@ export default function DebtDetails() {
                               />
 
                               <input
-                                className="input"
+                                className="field"
                                 type="date"
                                 value={editPaymentDate}
                                 onChange={(e) =>
@@ -557,7 +569,7 @@ export default function DebtDetails() {
                               </div>
 
                               <textarea
-                                className="textarea"
+                                className="field"
                                 value={editNote}
                                 onChange={(e) =>
                                   setEditNote(e.target.value)
@@ -567,6 +579,7 @@ export default function DebtDetails() {
                               <div className="payment-actions">
 
                                 <button
+                                  type="submit"
                                   className="button"
                                   onClick={() =>
 
@@ -582,7 +595,7 @@ export default function DebtDetails() {
                                 </button>
 
                                 <button
-                                  className="button secondary-button"
+                                  className="button secondary"
                                   onClick={cancelEdit}
                                 >
 
@@ -592,7 +605,7 @@ export default function DebtDetails() {
 
                               </div>
 
-                            </div>
+                            </form>
 
                           ) : (
 
@@ -667,7 +680,7 @@ export default function DebtDetails() {
                               <div className="payment-actions">
 
                                 <button
-                                  className="button small-button"
+                                  className="button small"
                                   onClick={() =>
 
                                     startEdit(
@@ -682,7 +695,7 @@ export default function DebtDetails() {
                                 </button>
 
                                 <button
-                                  className="button danger-button small-button"
+                                  className="button danger small"
                                   onClick={() =>
 
                                     deletePayment(
@@ -718,10 +731,10 @@ export default function DebtDetails() {
 
         }
 
-        <div className="details-footer">
+        <footer className="details-footer">
 
           <button
-            className="button danger-button"
+            className="button danger"
             onClick={deleteCurrentDebt}
           >
 
@@ -731,7 +744,7 @@ export default function DebtDetails() {
 
 
 
-        </div>
+        </footer>
 
       </div>
 

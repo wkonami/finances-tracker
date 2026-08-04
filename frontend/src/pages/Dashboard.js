@@ -17,77 +17,44 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
-  const [summary, setSummary] =
-    useState(null);
+  const [summary, setSummary] = useState(null);
+  const [debts, setDebts] = useState([]);
+  const [closedDebts, setClosedDebts] = useState([]);
+  const [activeTab, setActiveTab] = useState('open');
 
-  const [debts, setDebts] =
-    useState([]);
-
-  const [closedDebts, setClosedDebts] =
-    useState([]);
-
-  const [activeTab, setActiveTab] =
-    useState('open');
-
-  const role =
-    localStorage.getItem('role');
-
-  const username =
-    localStorage.getItem('username');
+  const role = localStorage.getItem('role');
+  const username = localStorage.getItem('username');
 
   function logout() {
-
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('username');
 
     navigate('/');
-
   }
 
-  const loadDebts =
-    useCallback(async () => {
+  const loadDebts = useCallback(async () => {
+    try {
+      const response = await api.get('/debts');
 
-      try {
+      setSummary(response.data.summary);
+      setDebts(response.data.debts);
+      setClosedDebts(response.data.closedDebts || []);
 
-        const response =
-          await api.get('/debts');
-
-        setSummary(
-          response.data.summary
-        );
-
-        setDebts(
-          response.data.debts
-        );
-
-        setClosedDebts(
-          response.data.closedDebts || []
-        );
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          'Erro ao carregar dívidas'
-        );
-
-      }
-
-    }, []);
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao carregar dívidas');
+    }
+  }, []);
 
   useEffect(() => {
-
     loadDebts();
-
   }, [loadDebts]);
 
   return (
-
     <div className="container">
 
-      <div className="top-bar">
+      <header className="top-bar">
 
         <div>
 
@@ -96,339 +63,212 @@ export default function Dashboard() {
           </h1>
 
           <div className="logged-user">
-            <strong>
-              {username}<br></br>
-            </strong>
-            <strong>
-              {role}
-            </strong>
+            <strong>{username}</strong>
+            <br />
+            {role}
           </div>
 
         </div>
 
         <button
-          className="button button-secondary"
+          className="button"
           onClick={logout}
         >
-
           Sair
-
         </button>
 
-      </div>
+      </header>
 
-      {
+      {summary && (
 
-        summary && (
+        <section className="summary-box">
 
-          <div className="summary-box">
+          <article className="summary-item card">
 
-            <div className="summary-item">
+            <span className="summary-label">
+              Total em aberto
+            </span>
 
-              <div className="summary-label">
-                Total em aberto
-              </div>
-
-              <div className="summary-value">
-
-                R$
-
-                {' '}
-
-                {
-
-                  Number(
-                    summary.totalOpen
-                  ).toFixed(2)
-
-                }
-
-              </div>
-
+            <div className="summary-value danger">
+              R$ {Number(summary.totalOpen).toFixed(2)}
             </div>
 
-            <div className="summary-item">
+          </article>
 
-              <div className="summary-label">
+            <article className="summary-item card"
+              onClick={() => setActiveTab('open')}
+            >
+              <span className="summary-label">
                 Pedidos abertos
-              </div>
-
+              </span>
               <div className="summary-value">
-
                 {summary.openCount}
-
               </div>
+            </article>
 
+
+          <article className="summary-item card">
+
+            <span className="summary-label">
+              Pedidos finalizados
+            </span>
+
+            <div className="summary-value success">
+              {summary.closedCount}
             </div>
 
-            <div className="summary-item">
+          </article>
 
-              <div className="summary-label">
-                Pedidos finalizados
-              </div>
+        </section>
 
-              <div className="summary-value">
+      )}
 
-                {summary.closedCount}
-
-              </div>
-
-            </div>
-
-          </div>
-
-        )
-
-      }
-
-      <div className="tabs">
+      <nav className="tabs">
 
         <button
           className="button"
-          onClick={() =>
-
-            setActiveTab('open')
-
-          }
+          onClick={() => setActiveTab('open')}
         >
-
           Em aberto
-
         </button>
 
         <button
           className="button"
-          onClick={() =>
-
-            setActiveTab('closed')
-
-          }
+          onClick={() => setActiveTab('closed')}
         >
-
           Quitadas
-
         </button>
 
         <Link to="/new">
 
           <button className="button">
-
             Nova dívida
-
           </button>
 
         </Link>
 
-        {
+        {role === 'ADMIN' && (
 
-          role === 'ADMIN' && (
+          <Link to="/users">
 
-            <Link to="/users">
+            <button className="button">
+              Usuários
+            </button>
 
-              <button className="button">
+          </Link>
 
-                Usuários
+        )}
 
-              </button>
+      </nav>
 
-            </Link>
+      {activeTab === 'open' && (
 
-          )
+        <section className="debts-section">
 
-        }
+          <h2 className="section-title">
+            Em aberto
+          </h2>
 
-      </div>
+          {debts.length === 0 ? (
 
-      {
+            <p className="empty-text">
+              Nenhuma dívida em aberto.
+            </p>
 
-        activeTab === 'open' && (
+          ) : (
 
-          <div className="debts-section">
+            <ul className="list debt-list">
 
-            <h2>
+              {debts.map((debt) => (
+                <Link to={`/debt/${debt.id}`} className="debt-link">
+                  <li key={debt.id} className="debt-item card">
+                    <div className="debt-info">
+                      {debt.debtorName}
+                      {debt.notes && (
+                        <div className="debt-note">
+                          {debt.notes}
+                        </div>
+                      )}
+                    </div>
 
-              Em aberto
+                    <div className="debt-actions">
+                      <span className="debt-value">
+                        R$ {Number(debt.totalOpen).toFixed(2)}
+                      </span>
+                    </div>
+                  </li>
+                </Link>
 
-            </h2>
+              ))}
 
-            {
+            </ul>
 
-              debts.length === 0
+          )}
 
-                ? (
+        </section>
 
-                  <p>
+      )}
 
-                    Nenhuma dívida em aberto.
+      {activeTab === 'closed' && (
 
-                  </p>
+        <section className="debts-section">
 
-                )
+          <h2 className="section-title">
+            Quitadas
+          </h2>
 
-                : (
+          {closedDebts.length === 0 ? (
 
-                  <ul className="debt-list">
+            <p className="empty-text">
+              Nenhuma dívida quitada.
+            </p>
 
-                    {
+          ) : (
 
-                      debts.map((debt) => (
+            <ul className="list debt-list">
 
-                        <li
-                          key={debt.id}
-                          className="debt-item"
-                        >
+              {closedDebts.map((debt) => (
 
-                          <div className="debt-info">
+                <li
+                  key={debt.id}
+                  className="closed-debt-item card"
+                >
 
-                            <Link
-                              className="debt-link"
-                              to={`/debt/${debt.id}`}
-                            >
+                  <div className="debt-info">
 
-                              {debt.debtorName}
+                    <Link
+                      to={`/debt/${debt.id}`}
+                      className="debt-link"
+                    >
 
-                            </Link>
+                      <div className="closed-debt-name">
+                        {debt.debtorName}
+                      </div>
 
-                            {
+                    </Link>
 
-                              debt.notes && (
+                    {debt.notes && (
 
-                                <div className="debt-note">
+                      <div className="closed-debt-note">
+                        {debt.notes}
+                      </div>
 
-                                  {debt.notes}
+                    )}
 
-                                </div>
+                  </div>
 
-                              )
+                </li>
 
-                            }
+              ))}
 
-                          </div>
+            </ul>
 
-                          <div className="debt-actions">
+          )}
 
-                            <span className="debt-value">
+        </section>
 
-                              R$
-
-                              {' '}
-
-                              {
-
-                                Number(
-                                  debt.totalOpen
-                                ).toFixed(2)
-
-                              }
-
-                            </span>
-
-                          </div>
-
-                        </li>
-
-                      ))
-
-                    }
-
-                  </ul>
-
-                )
-
-            }
-
-          </div>
-
-        )
-
-      }
-
-      {
-
-        activeTab === 'closed' && (
-
-          <div className="debts-section">
-
-            <h2>
-
-              Quitadas
-
-            </h2>
-
-            {
-
-              closedDebts.length === 0
-
-                ? (
-
-                  <p>
-
-                    Nenhuma dívida quitada.
-
-                  </p>
-
-                )
-
-                : (
-
-                  <ul className="debt-list">
-
-                    {
-
-                      closedDebts.map((debt) => (
-
-                        <li
-                          key={debt.id}
-                          className="closed-debt-item"
-                        >
-
-                          <Link
-                            className="debt-link"
-                            to={`/debt/${debt.id}`}
-                          >
-
-                            <div className="closed-debt-name">
-
-                              {debt.debtorName}
-
-                            </div>
-
-                          </Link>
-
-                          {
-
-                            debt.notes && (
-
-                              <div className="closed-debt-note">
-
-                                {debt.notes}
-
-                              </div>
-
-                            )
-
-                          }
-
-                        </li>
-
-                      ))
-
-                    }
-
-                  </ul>
-
-                )
-
-            }
-
-          </div>
-
-        )
-
-      }
+      )}
 
     </div>
-
   );
-
 }
