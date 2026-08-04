@@ -95,19 +95,19 @@ export default function Dashboard() {
 
           </article>
 
-            <article className="summary-item card"
-              onClick={() => setActiveTab('open')}
-            >
-              <span className="summary-label">
-                Pedidos abertos
-              </span>
-              <div className="summary-value">
-                {summary.openCount}
-              </div>
-            </article>
+          <article className="summary-item card"
+            onClick={() => setActiveTab('open')}
+          >
+            <span className="summary-label">
+              Pedidos abertos
+            </span>
+            <div className="summary-value">
+              {summary.openCount}
+            </div>
+          </article>
 
-
-          <article className="summary-item card">
+          <article className="summary-item card"
+            onClick={() => setActiveTab('closed')}>
 
             <span className="summary-label">
               Pedidos finalizados

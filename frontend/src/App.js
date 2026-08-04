@@ -89,7 +89,7 @@ export default function App() {
 
       <div className="loading-screen">
 
-        <div className="loading-box">
+        <div className="loading-box card">
 
           <h2>
             Conectando ao servidor...
