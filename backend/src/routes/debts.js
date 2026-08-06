@@ -10,7 +10,8 @@ const {
   listDebts,
   getDebt,
   updateDebt,
-  deleteDebt
+  deleteDebt,
+  markAsDelivered
 } = require('../controllers/debtController');
 
 const {
@@ -26,11 +27,6 @@ router.post('/', createDebt);
 
 router.get('/', listDebts);
 
-router.get('/:id', getDebt);
-
-router.put('/:id', updateDebt);
-
-router.delete('/:id', deleteDebt);
 
 // pagamentos
 router.post('/:id/payments', addPayment);
@@ -38,5 +34,15 @@ router.post('/:id/payments', addPayment);
 router.get('/:id/payments', listPayments);
 
 router.put('/payments/:paymentId', updatePayment);
+
+
+// detalhes da dívida
+router.get('/:id', getDebt);
+
+router.patch('/:id/delivered', markAsDelivered);
+
+router.put('/:id', updateDebt);
+
+router.delete('/:id', deleteDebt);
 
 module.exports = router;

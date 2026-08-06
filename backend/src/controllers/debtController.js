@@ -70,16 +70,17 @@ async function listDebts(req, res) {
       const totalOpen =
         Number(debt.totalAmount) - totalPaid;
 
+      const isPaid = totalOpen <= 0;
+
+      const isClosed =
+        debt.delivered && isPaid;
+
       return {
-
         ...debt,
-
         totalPaid,
-
         totalOpen,
-
-        isClosed: totalOpen <= 0
-
+        isPaid,
+        isClosed
       };
 
     });
@@ -182,15 +183,20 @@ async function getDebt(req, res) {
 
       );
 
+    const totalOpen =
+      Number(debt.totalAmount) - totalPaid;
+
+    const isPaid = totalOpen <=0;
+
+    const isClosed =
+      debt.delivered && isPaid
+
     return res.json({
-
       ...debt,
-
       totalPaid,
-
-      totalOpen:
-        Number(debt.totalAmount) - totalPaid
-
+      totalOpen,
+      isPaid,
+      isClosed
     });
 
   } catch (error) {
@@ -333,6 +339,64 @@ async function deleteDebt(req, res) {
 
 }
 
+async function markAsDelivered(req, res) {
+
+  try {
+
+    const id = Number(req.params.id);
+
+    const debt = await prisma.debt.findFirst({
+
+      where: {
+        id,
+        userId: req.user.id,
+        deletedAt: null
+      }
+
+    });
+
+    if (!debt) {
+
+      return res.status(404).json({
+        message: 'Dívida não encontrada'
+      });
+
+    }
+
+    if (debt.delivered) {
+
+      return res.status(400).json({
+        message: 'Esta dívida já foi marcada como entregue.'
+      });
+
+    }
+
+    const updatedDebt = await prisma.debt.update({
+
+      where: {
+        id
+      },
+
+      data: {
+        delivered: true
+      }
+
+    });
+
+    return res.json(updatedDebt);
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      message: 'Erro ao marcar dívida como entregue'
+    });
+
+  }
+
+}
+
 module.exports = {
 
   createDebt,
@@ -343,6 +407,8 @@ module.exports = {
 
   updateDebt,
 
-  deleteDebt
+  deleteDebt,
+
+  markAsDelivered
 
 };

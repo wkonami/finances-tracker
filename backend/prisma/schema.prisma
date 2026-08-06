@@ -1,63 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  role      Role      @default(USER)
+  deletedAt DateTime?
+  debts     Debt[]
+}
+
+model Debt {
+  id          Int       @id @default(autoincrement())
+  debtorName  String
+  totalAmount Decimal   @db.Decimal(10, 2)
+  notes       String?
+  delivered   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  payments    Payment[]
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  amount      Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  debtId      Int
+  paymentDate DateTime
+  note        String?
+  debt        Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
   ADMIN
   MANAGER
   USER
-}
-
-model User {
-  id         Int       @id @default(autoincrement())
-  username   String    @unique
-  password   String
-
-  role        Role      @default(USER)
-
-  createdAt   DateTime  @default(now())
-  deletedAt   DateTime?
-
-  debts        Debt[]
-}
-
-model Debt {
-  id           Int       @id @default(autoincrement())
-
-  debtorName   String
-
-  totalAmount  Decimal   @db.Decimal(10,2)
-
-  notes        String?
-
-  createdAt    DateTime  @default(now())
-
-  deletedAt    DateTime?
-
-  userId       Int
-
-  user         User @relation(fields: [userId], references: [id])
-
-  payments     Payment[]
-}
-
-model Payment {
-  id            Int      @id @default(autoincrement())
-
-  amount        Decimal  @db.Decimal(10,2)
-
-  paymentDate   DateTime
-
-  note          String?
-
-  createdAt     DateTime @default(now())
-
-  debtId        Int
-
-  debt          Debt @relation(fields: [debtId], references: [id], onDelete: Cascade)
 }

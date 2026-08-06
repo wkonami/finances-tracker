@@ -3,27 +3,41 @@ const prisma = require('../prismaClient');
 async function addPayment(req, res) {
 
   try {
-
     const debtId = parseInt(req.params.id);
 
-    const {
-      amount,
-      paymentDate,
-      note
-    } = req.body;
-
-    if (!amount || !paymentDate) {
+    if (isNaN(debtId)) {
 
       return res.status(400).json({
-        message: 'Valor e data são obrigatórios'
+        message: 'ID da dívida inválido'
       });
 
     }
 
-    const debt = await prisma.debt.findUnique({
+    const {
+      amount,
+      note
+    } = req.body;
+
+    if (!amount) {
+
+      return res.status(400).json({
+        message: 'Valor é obrigatório'
+      });
+
+    }
+
+    if (Number(amount) <= 0) {
+      return res.status(400).json({
+        message: 'O valor do pagamento deve ser maior que zero'
+      });
+    }
+
+    const debt = await prisma.debt.findFirst({
 
       where: {
-        id: debtId
+        id: debtId,
+        userId: req.user.id,
+        deletedAt: null
       },
 
       include: {
@@ -54,7 +68,6 @@ async function addPayment(req, res) {
     const newTotalPaid =
       totalPaid + Number(amount);
 
-    // tolerância para evitar problemas de precisão decimal
     if (
 
       newTotalPaid >
@@ -77,10 +90,10 @@ async function addPayment(req, res) {
 
         data: {
 
-          amount: parseFloat(amount),
+          amount: Number(amount),
 
           paymentDate:
-            new Date(paymentDate),
+            new Date(),
 
           note,
 
@@ -206,7 +219,9 @@ async function updatePayment(req, res) {
             parseFloat(amount),
 
           paymentDate:
-            new Date(paymentDate),
+            paymentDate
+              ? new Date(paymentDate)
+              : undefined,
 
           note
 

@@ -9,6 +9,13 @@ import {
   useNavigate
 } from 'react-router-dom';
 
+import {
+    FaBoxOpen,
+    FaMoneyBillWave
+} from "react-icons/fa";
+
+import PaymentModal from '../components/PaymentModal';
+
 import api from '../services/api';
 
 import '../App.css';
@@ -21,6 +28,10 @@ export default function Dashboard() {
   const [debts, setDebts] = useState([]);
   const [closedDebts, setClosedDebts] = useState([]);
   const [activeTab, setActiveTab] = useState('open');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedDebt, setSelectedDebt] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
 
   const role = localStorage.getItem('role');
   const username = localStorage.getItem('username');
@@ -31,6 +42,56 @@ export default function Dashboard() {
     localStorage.removeItem('username');
 
     navigate('/');
+  }
+
+  async function markAsDelivered(id) {
+
+    try {
+
+      await api.patch(`/debts/${id}/delivered`);
+
+      loadDebts();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert("Erro ao marcar como entregue.");
+
+    }
+
+  }
+
+  function openPaymentModal(debt) {
+    setSelectedDebt(debt);
+    setPaymentAmount(Number(debt.totalOpen).toFixed(2));
+    setPaymentNote('');
+    setShowPaymentModal(true);
+  }
+
+  function closePaymentModal() {
+    setShowPaymentModal(false);
+    setSelectedDebt(null);
+  }
+
+  async function savePayment() {
+    if (!selectedDebt) return;
+    try {
+        await api.post(
+          `/debts/${selectedDebt.id}/payments`,
+          {
+            amount: Number(paymentAmount),
+            note: paymentNote
+          });
+        closePaymentModal();
+        loadDebts();
+    } catch (error) {
+        console.error(error);
+        alert(error.response?.data?.message ||
+            'Erro ao registrar pagamento.'
+        );
+    }
+
   }
 
   const loadDebts = useCallback(async () => {
@@ -180,24 +241,66 @@ export default function Dashboard() {
             <ul className="list debt-list">
 
               {debts.map((debt) => (
-                <Link to={`/debt/${debt.id}`} className="debt-link">
-                  <li key={debt.id} className="debt-item card">
+                  <li key={debt.id} className="debt-item card" onClick={() => navigate(`/debt/${debt.id}`)}>
                     <div className="debt-info">
                       {debt.debtorName}
+                      <div
+                          className={`delivery-status ${
+                              debt.delivered ? 'delivered' : 'pending'
+                          }`}
+                      >
+                          {debt.delivered
+                              ? 'Entregue'
+                              : 'Aguardando entrega'}
+                      </div>
                       {debt.notes && (
                         <div className="debt-note">
                           {debt.notes}
                         </div>
                       )}
                     </div>
-
+                    <span className="debt-value">
+                      R$ {Number(debt.totalOpen).toFixed(2)}
+                    </span>
                     <div className="debt-actions">
-                      <span className="debt-value">
-                        R$ {Number(debt.totalOpen).toFixed(2)}
-                      </span>
+                      {!debt.delivered && (
+                        <button
+                            className="icon-button"
+                            onClick={(e) => {
+
+                                e.stopPropagation();
+
+                                markAsDelivered(debt.id);
+
+                            }}
+                            title="Marcar como entregue"
+                        >
+
+                            <FaBoxOpen />
+
+                        </button>
+                      )}
+
+                      {!debt.isPaid && (
+                        <button
+                            className="icon-button"
+                            onClick={(e) => {
+
+                                e.stopPropagation();
+
+                                openPaymentModal(debt);
+
+                            }}
+                            title="Registrar pagamento"
+                        >
+
+                            <FaMoneyBillWave />
+
+                        </button>
+                      )}
+
                     </div>
                   </li>
-                </Link>
 
               ))}
 
@@ -268,7 +371,15 @@ export default function Dashboard() {
         </section>
 
       )}
-
+      <PaymentModal
+        visible={showPaymentModal}
+        amount={paymentAmount}
+        note={paymentNote}
+        onAmountChange={setPaymentAmount}
+        onNoteChange={setPaymentNote}
+        onCancel={closePaymentModal}
+        onSave={savePayment}
+      />
     </div>
   );
 }
