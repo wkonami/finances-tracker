@@ -111,12 +111,18 @@ async function addPayment(req, res) {
 
     return res.json(payment);
 
-  } catch (error) {
+  }catch(error) {
 
-    console.error(error);
+    console.error({
+        error: error.message,
+        stack: error.stack,
+        endpoint: req.originalUrl,
+        method: req.method,
+        user: req.user?.id
+    });
 
     return res.status(500).json({
-      message: 'Erro ao adicionar pagamento'
+        message: 'Erro interno do servidor'
     });
 
   }

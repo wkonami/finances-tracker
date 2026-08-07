@@ -68,7 +68,7 @@ export default function NewDebt() {
         </button>
 
         <h1 className="title">
-          Nova Dívida
+          Novo pedido
         </h1>
 
         <form

@@ -130,7 +130,13 @@ export default function Dashboard() {
           </div>
 
         </div>
-
+        {role === 'ADMIN' && (
+          <Link to="/users">
+            <button className="button">
+              Usuários
+            </button>
+          </Link>
+        )}
         <button
           className="button"
           onClick={logout}
@@ -190,35 +196,23 @@ export default function Dashboard() {
           className="button"
           onClick={() => setActiveTab('open')}
         >
-          Em aberto
+          Abertos
         </button>
 
         <button
           className="button"
           onClick={() => setActiveTab('closed')}
         >
-          Quitadas
+          Fechados
         </button>
 
         <Link to="/new">
 
           <button className="button">
-            Nova dívida
+            Novo
           </button>
 
         </Link>
-
-        {role === 'ADMIN' && (
-
-          <Link to="/users">
-
-            <button className="button">
-              Usuários
-            </button>
-
-          </Link>
-
-        )}
 
       </nav>
 
@@ -227,13 +221,13 @@ export default function Dashboard() {
         <section className="debts-section">
 
           <h2 className="section-title">
-            Em aberto
+            Abertos
           </h2>
 
           {debts.length === 0 ? (
 
             <p className="empty-text">
-              Nenhuma dívida em aberto.
+              Nenhum pedido em aberto.
             </p>
 
           ) : (
@@ -317,13 +311,13 @@ export default function Dashboard() {
         <section className="debts-section">
 
           <h2 className="section-title">
-            Quitadas
+            Fechados
           </h2>
 
           {closedDebts.length === 0 ? (
 
             <p className="empty-text">
-              Nenhuma dívida quitada.
+              Nenhuma pedido fechado.
             </p>
 
           ) : (
