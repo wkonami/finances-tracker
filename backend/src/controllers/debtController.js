@@ -1,39 +1,184 @@
 const prisma = require('../prismaClient');
 
+const MAX_DEBTOR_NAME_LENGTH = 100;
+const MAX_NOTES_LENGTH = 500;
+const MAX_DEBT_AMOUNT = 99999999.99;
+
+function validateAmount(value) {
+
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return {
+      valid: false,
+      message: 'Valor inválido'
+    };
+  }
+
+  if (amount <= 0) {
+    return {
+      valid: false,
+      message: 'O valor deve ser maior que zero'
+    };
+  }
+
+  if (amount > MAX_DEBT_AMOUNT) {
+    return {
+      valid: false,
+      message: 'O valor é muito alto'
+    };
+  }
+
+  if (!/^\d+(\.\d{1,2})?$/.test(String(value))) {
+    return {
+      valid: false,
+      message: 'O valor deve possuir no máximo 2 casas decimais'
+    };
+  }
+
+  return {
+    valid: true,
+    amount
+  };
+}
+
+function validateNotes(notes) {
+
+  if (notes === undefined || notes === null || notes === '') {
+    return {
+      valid: true,
+      value: null
+    };
+  }
+
+  if (typeof notes !== 'string') {
+    return {
+      valid: false,
+      message: 'Observação inválida'
+    };
+  }
+
+  const trimmedNotes = notes.trim();
+
+  if (trimmedNotes.length > MAX_NOTES_LENGTH) {
+    return {
+      valid: false,
+      message: `A observação deve possuir no máximo ${MAX_NOTES_LENGTH} caracteres`
+    };
+  }
+
+  return {
+    valid: true,
+    value: trimmedNotes || null
+  };
+}
+
 async function createDebt(req, res) {
+
   try {
+
     const {
       debtorName,
       totalAmount,
       notes
     } = req.body;
 
-    if (!debtorName || totalAmount == null) {
+    if (
+      typeof debtorName !== 'string' ||
+      !debtorName.trim()
+    ) {
+
       return res.status(400).json({
-        message: 'Nome do devedor e valor são obrigatórios'
+        message: 'Nome é obrigatório'
       });
+
+    }
+
+    const trimmedDebtorName =
+      debtorName.trim();
+
+    if (
+      trimmedDebtorName.length >
+      MAX_DEBTOR_NAME_LENGTH
+    ) {
+
+      return res.status(400).json({
+        message:
+          `O nome deve possuir no máximo ${MAX_DEBTOR_NAME_LENGTH} caracteres`
+      });
+
+    }
+
+    if (
+      totalAmount === undefined ||
+      totalAmount === null ||
+      totalAmount === ''
+    ) {
+
+      return res.status(400).json({
+        message: 'Valor é obrigatório'
+      });
+
+    }
+
+    const amountValidation =
+      validateAmount(totalAmount);
+
+    if (!amountValidation.valid) {
+
+      return res.status(400).json({
+        message: amountValidation.message
+      });
+
+    }
+
+    const notesValidation =
+      validateNotes(notes);
+
+    if (!notesValidation.valid) {
+
+      return res.status(400).json({
+        message: notesValidation.message
+      });
+
     }
 
     const debt = await prisma.debt.create({
+
       data: {
-        debtorName,
-        totalAmount: parseFloat(totalAmount),
-        notes,
+
+        debtorName: trimmedDebtorName,
+
+        totalAmount:
+          amountValidation.amount,
+
+        notes:
+          notesValidation.value,
+
         userId: req.user.id
+
       }
+
     });
 
-    return res.json(debt);
+    return res.status(201).json(debt);
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
 
     return res.status(500).json({
-      message: 'Erro ao criar dívida'
+      message: 'Erro interno'
     });
 
   }
+
 }
 
 async function listDebts(req, res) {
@@ -43,8 +188,11 @@ async function listDebts(req, res) {
     const debts = await prisma.debt.findMany({
 
       where: {
+
         userId: req.user.id,
+
         deletedAt: null
+
       },
 
       include: {
@@ -57,33 +205,45 @@ async function listDebts(req, res) {
 
     });
 
-    const formattedDebts = debts.map((debt) => {
+    const formattedDebts =
+      debts.map((debt) => {
 
-      const totalPaid = debt.payments.reduce(
+        const totalPaid =
+          debt.payments.reduce(
 
-        (sum, payment) => sum + Number(payment.amount),
+            (sum, payment) =>
+              sum + Number(payment.amount),
 
-        0
+            0
 
-      );
+          );
 
-      const totalOpen =
-        Number(debt.totalAmount) - totalPaid;
+        const totalOpen =
+          Number(debt.totalAmount) -
+          totalPaid;
 
-      const isPaid = totalOpen <= 0;
+        const isPaid =
+          totalOpen <= 0;
 
-      const isClosed =
-        debt.delivered && isPaid;
+        const isClosed =
+          debt.delivered &&
+          isPaid;
 
-      return {
-        ...debt,
-        totalPaid,
-        totalOpen,
-        isPaid,
-        isClosed
-      };
+        return {
 
-    });
+          ...debt,
+
+          totalPaid,
+
+          totalOpen,
+
+          isPaid,
+
+          isClosed
+
+        };
+
+      });
 
     const openDebts =
       formattedDebts.filter(d => !d.isClosed);
@@ -92,8 +252,8 @@ async function listDebts(req, res) {
       formattedDebts.filter(d => d.isClosed);
 
     const totalOpen =
-      openDebts.reduce(
-        (sum, debt) => sum + debt.totalOpen,
+      formattedDebts.reduce(
+        (sum, debt) => sum + Math.max(debt.totalOpen, 0),
         0
       );
 
@@ -103,18 +263,25 @@ async function listDebts(req, res) {
         0
       );
 
+    const pendingDeliveries =
+      formattedDebts.filter(
+        debt => !debt.delivered
+      ).length;
+
+    const awaitingPayment =
+      formattedDebts.filter(
+        debt => !debt.isPaid
+      ).length;
+
     return res.json({
 
       summary: {
-
         totalOpen,
-
         totalPaid,
-
+        pendingDeliveries,
+        awaitingPayment,
         openCount: openDebts.length,
-
         closedCount: closedDebts.length
-
       },
 
       debts: openDebts,
@@ -125,12 +292,16 @@ async function listDebts(req, res) {
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
 
     return res.status(500).json({
-
-      message: 'Erro ao listar dívidas'
-
+      message: 'Erro interno ao listar dívidas'
     });
 
   }
@@ -141,34 +312,40 @@ async function getDebt(req, res) {
 
   try {
 
-    const id = Number(req.params.id);
+    const id =
+      Number(req.params.id);
 
-    const debt = await prisma.debt.findFirst({
+    if (!Number.isInteger(id) || id <= 0) {
 
-      where: {
+      return res.status(400).json({
+        message: 'ID inválido'
+      });
 
-        id,
+    }
 
-        userId: req.user.id,
+    const debt =
+      await prisma.debt.findFirst({
 
-        deletedAt: null
+        where: {
 
-      },
+          id,
 
-      include: {
+          userId: req.user.id,
 
-        payments: true
+          deletedAt: null
 
-      }
+        },
 
-    });
+        include: {
+          payments: true
+        }
+
+      });
 
     if (!debt) {
 
       return res.status(404).json({
-
         message: 'Dívida não encontrada'
-
       });
 
     }
@@ -184,29 +361,42 @@ async function getDebt(req, res) {
       );
 
     const totalOpen =
-      Number(debt.totalAmount) - totalPaid;
+      Number(debt.totalAmount) -
+      totalPaid;
 
-    const isPaid = totalOpen <=0;
+    const isPaid =
+      totalOpen <= 0;
 
     const isClosed =
-      debt.delivered && isPaid
+      debt.delivered &&
+      isPaid;
 
     return res.json({
+
       ...debt,
+
       totalPaid,
+
       totalOpen,
+
       isPaid,
+
       isClosed
+
     });
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
 
     return res.status(500).json({
-
-      message: 'Erro ao buscar dívida'
-
+      message: 'Erro interno ao buscar dívida'
     });
 
   }
@@ -217,24 +407,36 @@ async function updateDebt(req, res) {
 
   try {
 
-    const id = Number(req.params.id);
+    const id =
+      Number(req.params.id);
 
-    const debt = await prisma.debt.findFirst({
+    if (!Number.isInteger(id) || id <= 0) {
 
-      where: {
-        id,
-        userId: req.user.id,
-        deletedAt: null
-      }
+      return res.status(400).json({
+        message: 'ID inválido'
+      });
 
-    });
+    }
+
+    const debt =
+      await prisma.debt.findFirst({
+
+        where: {
+
+          id,
+
+          userId: req.user.id,
+
+          deletedAt: null
+
+        }
+
+      });
 
     if (!debt) {
 
       return res.status(404).json({
-
         message: 'Dívida não encontrada'
-
       });
 
     }
@@ -244,35 +446,69 @@ async function updateDebt(req, res) {
       notes
     } = req.body;
 
-    const updated = await prisma.debt.update({
+    const data = {};
 
-      where: {
-        id
-      },
+    if (totalAmount !== undefined) {
 
-      data: {
+      const amountValidation =
+        validateAmount(totalAmount);
 
-        totalAmount:
-          totalAmount !== undefined
-            ? parseFloat(totalAmount)
-            : undefined,
+      if (!amountValidation.valid) {
 
-        notes
+        return res.status(400).json({
+          message: amountValidation.message
+        });
 
       }
 
-    });
+      data.totalAmount =
+        amountValidation.amount;
+
+    }
+
+    if (notes !== undefined) {
+
+      const notesValidation =
+        validateNotes(notes);
+
+      if (!notesValidation.valid) {
+
+        return res.status(400).json({
+          message: notesValidation.message
+        });
+
+      }
+
+      data.notes =
+        notesValidation.value;
+
+    }
+
+    const updated =
+      await prisma.debt.update({
+
+        where: {
+          id
+        },
+
+        data
+
+      });
 
     return res.json(updated);
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
 
     return res.status(500).json({
-
-      message: 'Erro ao atualizar dívida'
-
+      message: 'Erro interno ao atualizar dívida'
     });
 
   }
@@ -283,24 +519,36 @@ async function deleteDebt(req, res) {
 
   try {
 
-    const id = Number(req.params.id);
+    const id =
+      Number(req.params.id);
 
-    const debt = await prisma.debt.findFirst({
+    if (!Number.isInteger(id) || id <= 0) {
 
-      where: {
-        id,
-        userId: req.user.id,
-        deletedAt: null
-      }
+      return res.status(400).json({
+        message: 'ID da dívida inválido'
+      });
 
-    });
+    }
+
+    const debt =
+      await prisma.debt.findFirst({
+
+        where: {
+
+          id,
+
+          userId: req.user.id,
+
+          deletedAt: null
+
+        }
+
+      });
 
     if (!debt) {
 
       return res.status(404).json({
-
         message: 'Dívida não encontrada'
-
       });
 
     }
@@ -313,26 +561,29 @@ async function deleteDebt(req, res) {
 
       data: {
 
-        deletedAt: new Date()
+        deletedAt:
+          new Date()
 
       }
 
     });
 
     return res.json({
-
       message: 'Dívida arquivada'
-
     });
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
 
     return res.status(500).json({
-
-      message: 'Erro ao arquivar dívida'
-
+      message: 'Erro interno ao arquivar dívida'
     });
 
   }
@@ -343,17 +594,31 @@ async function markAsDelivered(req, res) {
 
   try {
 
-    const id = Number(req.params.id);
+    const id =
+      Number(req.params.id);
 
-    const debt = await prisma.debt.findFirst({
+    if (!Number.isInteger(id) || id <= 0) {
 
-      where: {
-        id,
-        userId: req.user.id,
-        deletedAt: null
-      }
+      return res.status(400).json({
+        message: 'ID da dívida inválido'
+      });
 
-    });
+    }
+
+    const debt =
+      await prisma.debt.findFirst({
+
+        where: {
+
+          id,
+
+          userId: req.user.id,
+
+          deletedAt: null
+
+        }
+
+      });
 
     if (!debt) {
 
@@ -366,31 +631,39 @@ async function markAsDelivered(req, res) {
     if (debt.delivered) {
 
       return res.status(400).json({
-        message: 'Esta dívida já foi marcada como entregue.'
+        message:
+          'Esta dívida já foi marcada como entregue.'
       });
 
     }
 
-    const updatedDebt = await prisma.debt.update({
+    const updatedDebt =
+      await prisma.debt.update({
 
-      where: {
-        id
-      },
+        where: {
+          id
+        },
 
-      data: {
-        delivered: true
-      }
+        data: {
+          delivered: true
+        }
 
-    });
+      });
 
     return res.json(updatedDebt);
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
 
     return res.status(500).json({
-      message: 'Erro ao marcar dívida como entregue'
+      message: 'Erro interno ao marcar dívida como entregue'
     });
 
   }
@@ -398,17 +671,10 @@ async function markAsDelivered(req, res) {
 }
 
 module.exports = {
-
   createDebt,
-
   listDebts,
-
   getDebt,
-
   updateDebt,
-
   deleteDebt,
-
   markAsDelivered
-
 };

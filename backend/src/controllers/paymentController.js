@@ -1,11 +1,127 @@
 const prisma = require('../prismaClient');
 
+const MAX_PAYMENT_AMOUNT = 99999999.99;
+const MAX_NOTE_LENGTH = 500;
+
+function validateAmount(value) {
+
+  if (
+    value === undefined ||
+    value === null ||
+    value === ''
+  ) {
+
+    return {
+      valid: false,
+      message: 'Valor do pagamento é obrigatório'
+    };
+
+  }
+
+  const stringValue = String(value).trim();
+
+  if (!/^\d+(\.\d{1,2})?$/.test(stringValue)) {
+
+    return {
+      valid: false,
+      message:
+        'O valor deve ser um número válido com no máximo 2 casas decimais'
+    };
+
+  }
+
+  const amount = Number(stringValue);
+
+  if (!Number.isFinite(amount)) {
+
+    return {
+      valid: false,
+      message: 'Valor do pagamento inválido'
+    };
+
+  }
+
+  if (amount <= 0) {
+
+    return {
+      valid: false,
+      message:
+        'O valor do pagamento deve ser maior que zero'
+    };
+
+  }
+
+  if (amount > MAX_PAYMENT_AMOUNT) {
+
+    return {
+      valid: false,
+      message:
+        'O valor do pagamento é muito alto'
+    };
+
+  }
+
+  return {
+    valid: true,
+    amount
+  };
+
+}
+
+function validateNote(note) {
+
+  if (
+    note === undefined ||
+    note === null ||
+    note === ''
+  ) {
+
+    return {
+      valid: true,
+      value: null
+    };
+
+  }
+
+  if (typeof note !== 'string') {
+
+    return {
+      valid: false,
+      message: 'Observação inválida'
+    };
+
+  }
+
+  const trimmedNote = note.trim();
+
+  if (trimmedNote.length > MAX_NOTE_LENGTH) {
+
+    return {
+      valid: false,
+      message:
+        `A observação deve possuir no máximo ${MAX_NOTE_LENGTH} caracteres`
+    };
+
+  }
+
+  return {
+    valid: true,
+    value: trimmedNote || null
+  };
+
+}
+
 async function addPayment(req, res) {
 
   try {
-    const debtId = parseInt(req.params.id);
 
-    if (isNaN(debtId)) {
+    const debtId =
+      Number(req.params.id);
+
+    if (
+      !Number.isInteger(debtId) ||
+      debtId <= 0
+    ) {
 
       return res.status(400).json({
         message: 'ID da dívida inválido'
@@ -18,33 +134,46 @@ async function addPayment(req, res) {
       note
     } = req.body;
 
-    if (!amount) {
+    const amountValidation =
+      validateAmount(amount);
+
+    if (!amountValidation.valid) {
 
       return res.status(400).json({
-        message: 'Valor é obrigatório'
+        message: amountValidation.message
       });
 
     }
 
-    if (Number(amount) <= 0) {
+    const noteValidation =
+      validateNote(note);
+
+    if (!noteValidation.valid) {
+
       return res.status(400).json({
-        message: 'O valor do pagamento deve ser maior que zero'
+        message: noteValidation.message
       });
+
     }
 
-    const debt = await prisma.debt.findFirst({
+    const debt =
+      await prisma.debt.findFirst({
 
-      where: {
-        id: debtId,
-        userId: req.user.id,
-        deletedAt: null
-      },
+        where: {
 
-      include: {
-        payments: true
-      }
+          id: debtId,
 
-    });
+          userId: req.user.id,
+
+          deletedAt: null
+
+        },
+
+        include: {
+          payments: true
+        }
+
+      });
 
     if (!debt) {
 
@@ -58,7 +187,6 @@ async function addPayment(req, res) {
       debt.payments.reduce(
 
         (sum, payment) =>
-
           sum + Number(payment.amount),
 
         0
@@ -66,14 +194,12 @@ async function addPayment(req, res) {
       );
 
     const newTotalPaid =
-      totalPaid + Number(amount);
+      totalPaid +
+      amountValidation.amount;
 
     if (
-
       newTotalPaid >
-
       Number(debt.totalAmount) + 0.01
-
     ) {
 
       return res.status(400).json({
@@ -90,12 +216,14 @@ async function addPayment(req, res) {
 
         data: {
 
-          amount: Number(amount),
+          amount:
+            amountValidation.amount,
 
-          paymentDate:
+            paymentDate:
             new Date(),
 
-          note,
+          note:
+            noteValidation.value,
 
           debt: {
 
@@ -109,20 +237,26 @@ async function addPayment(req, res) {
 
       });
 
-    return res.json(payment);
+    return res.status(201).json(payment);
 
-  }catch(error) {
+  } catch (error) {
 
     console.error({
-        error: error.message,
-        stack: error.stack,
-        endpoint: req.originalUrl,
-        method: req.method,
-        user: req.user?.id
+
+      error: error.message,
+
+      stack: error.stack,
+
+      endpoint: req.originalUrl,
+
+      method: req.method,
+
+      userId: req.user?.id
+
     });
 
     return res.status(500).json({
-        message: 'Erro interno do servidor'
+      message: 'Erro interno ao registrar pagamento'
     });
 
   }
@@ -134,13 +268,67 @@ async function updatePayment(req, res) {
   try {
 
     const paymentId =
-      parseInt(req.params.paymentId);
+      Number(req.params.paymentId);
+
+    if (
+      !Number.isInteger(paymentId) ||
+      paymentId <= 0
+    ) {
+
+      return res.status(400).json({
+        message: 'ID do pagamento inválido'
+      });
+
+    }
 
     const {
       amount,
       paymentDate,
       note
     } = req.body;
+
+    const amountValidation =
+      validateAmount(amount);
+
+    if (!amountValidation.valid) {
+
+      return res.status(400).json({
+        message: amountValidation.message
+      });
+
+    }
+
+    const noteValidation =
+      validateNote(note);
+
+    if (!noteValidation.valid) {
+
+      return res.status(400).json({
+        message: noteValidation.message
+      });
+
+    }
+
+    let parsedPaymentDate;
+
+    if (paymentDate !== undefined) {
+
+      parsedPaymentDate =
+        new Date(paymentDate);
+
+      if (
+        Number.isNaN(
+          parsedPaymentDate.getTime()
+        )
+      ) {
+
+        return res.status(400).json({
+          message: 'Data de pagamento inválida'
+        });
+
+      }
+
+    }
 
     const existingPayment =
       await prisma.payment.findUnique({
@@ -150,11 +338,15 @@ async function updatePayment(req, res) {
         },
 
         include: {
+
           debt: {
+
             include: {
               payments: true
             }
+
           }
+
         }
 
       });
@@ -170,6 +362,16 @@ async function updatePayment(req, res) {
     const debt =
       existingPayment.debt;
 
+    if (
+      debt.userId !== req.user.id
+    ) {
+
+      return res.status(404).json({
+        message: 'Pagamento não encontrado'
+      });
+
+    }
+
     const otherPaymentsTotal =
       debt.payments.reduce(
 
@@ -178,11 +380,14 @@ async function updatePayment(req, res) {
           if (
             payment.id === paymentId
           ) {
+
             return sum;
+
           }
 
           return (
-            sum + Number(payment.amount)
+            sum +
+            Number(payment.amount)
           );
 
         },
@@ -193,14 +398,11 @@ async function updatePayment(req, res) {
 
     const futureTotal =
       otherPaymentsTotal +
-      Number(amount);
+      amountValidation.amount;
 
     if (
-
       futureTotal >
-
       Number(debt.totalAmount) + 0.01
-
     ) {
 
       return res.status(400).json({
@@ -222,14 +424,15 @@ async function updatePayment(req, res) {
         data: {
 
           amount:
-            parseFloat(amount),
+            amountValidation.amount,
 
           paymentDate:
-            paymentDate
-              ? new Date(paymentDate)
+            parsedPaymentDate !== undefined
+              ? parsedPaymentDate
               : undefined,
 
-          note
+          note:
+            noteValidation.value
 
         }
 
@@ -239,10 +442,22 @@ async function updatePayment(req, res) {
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+
+      error: error.message,
+
+      stack: error.stack,
+
+      endpoint: req.originalUrl,
+
+      method: req.method,
+
+      userId: req.user?.id
+
+    });
 
     return res.status(500).json({
-      message: 'Erro ao atualizar pagamento'
+      message: 'Erro interno ao atualizar pagamento'
     });
 
   }
@@ -254,17 +469,55 @@ async function listPayments(req, res) {
   try {
 
     const debtId =
-      parseInt(req.params.id);
+      Number(req.params.id);
+
+    if (
+      !Number.isInteger(debtId) ||
+      debtId <= 0
+    ) {
+
+      return res.status(400).json({
+        message: 'ID da dívida inválido'
+      });
+
+    }
+
+    const debt =
+      await prisma.debt.findFirst({
+
+        where: {
+
+          id: debtId,
+
+          userId: req.user.id,
+
+          deletedAt: null
+
+        }
+
+      });
+
+    if (!debt) {
+
+      return res.status(404).json({
+        message: 'Dívida não encontrada'
+      });
+
+    }
 
     const payments =
       await prisma.payment.findMany({
 
         where: {
+
           debtId
+
         },
 
         orderBy: {
+
           paymentDate: 'desc'
+
         }
 
       });
@@ -273,10 +526,22 @@ async function listPayments(req, res) {
 
   } catch (error) {
 
-    console.error(error);
+    console.error({
+
+      error: error.message,
+
+      stack: error.stack,
+
+      endpoint: req.originalUrl,
+
+      method: req.method,
+
+      userId: req.user?.id
+
+    });
 
     return res.status(500).json({
-      message: 'Erro ao listar pagamentos'
+      message: 'Erro interno ao listar pagamentos'
     });
 
   }

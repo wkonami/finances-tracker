@@ -153,7 +153,7 @@ export default function Dashboard() {
           <article className="summary-item card">
 
             <span className="summary-label">
-              Total em aberto
+              Total a receber
             </span>
 
             <div className="summary-value danger">
@@ -162,26 +162,32 @@ export default function Dashboard() {
 
           </article>
 
-          <article className="summary-item card"
+          <article
+            className="summary-item card"
             onClick={() => setActiveTab('open')}
           >
+
             <span className="summary-label">
-              Pedidos abertos
+              Entregas pendentes
             </span>
+
             <div className="summary-value">
-              {summary.openCount}
+              {summary.pendingDeliveries}
             </div>
+
           </article>
 
-          <article className="summary-item card"
-            onClick={() => setActiveTab('closed')}>
+          <article
+            className="summary-item card"
+            onClick={() => setActiveTab('open')}
+          >
 
             <span className="summary-label">
-              Pedidos finalizados
+              Aguardando pagamento
             </span>
 
-            <div className="summary-value success">
-              {summary.closedCount}
+            <div className="summary-value">
+              {summary.awaitingPayment}
             </div>
 
           </article>
@@ -232,73 +238,112 @@ export default function Dashboard() {
 
           ) : (
 
-            <ul className="list debt-list">
+            <div className="debts-grid">
 
               {debts.map((debt) => (
-                  <li key={debt.id} className="debt-item card" onClick={() => navigate(`/debt/${debt.id}`)}>
-                    <div className="debt-info">
+
+                <article
+                  key={debt.id}
+                  className="debt-card card"
+                  onClick={() => navigate(`/debt/${debt.id}`)}
+                >
+
+                  <div className="debt-card-header">
+
+                    <h3 className="debt-card-name">
                       {debt.debtorName}
-                      <div
-                          className={`delivery-status ${
-                              debt.delivered ? 'delivered' : 'pending'
-                          }`}
-                      >
-                          {debt.delivered
-                              ? 'Entregue'
-                              : 'Aguardando entrega'}
-                      </div>
-                      {debt.notes && (
-                        <div className="debt-note">
-                          {debt.notes}
-                        </div>
-                      )}
-                    </div>
-                    <span className="debt-value">
-                      R$ {Number(debt.totalOpen).toFixed(2)}
+                    </h3>
+
+                    <span
+                      className={`delivery-status ${
+                        debt.delivered
+                          ? 'delivered'
+                          : 'pending'
+                      }`}
+                    >
+                      {debt.delivered
+                        ? 'Entregue'
+                        : 'Aguardando entrega'}
                     </span>
+
+                  </div>
+
+                  <div className="debt-card-notes">
+
+                    {debt.notes ? (
+                      <p>{debt.notes}</p>
+                    ) : (
+                      <span className="no-notes">
+                        Sem observações
+                      </span>
+                    )}
+
+                  </div>
+
+                  <div className="debt-card-footer">
+
+                    <div className="debt-card-value">
+
+                      <strong>
+                        {debt.isPaid
+                          ? 'Pago!'
+                          : `R$ ${Number(debt.totalOpen).toFixed(2)}`
+                        }
+                      </strong>
+
+                    </div>
+
                     <div className="debt-actions">
+
                       {!debt.delivered && (
+
                         <button
-                            className="icon-button"
-                            onClick={(e) => {
+                          type="button"
+                          className="icon-button"
+                          onClick={(e) => {
 
-                                e.stopPropagation();
+                            e.stopPropagation();
 
-                                markAsDelivered(debt.id);
+                            markAsDelivered(debt.id);
 
-                            }}
-                            title="Marcar como entregue"
+                          }}
+                          title="Marcar como entregue"
+                          aria-label="Marcar como entregue"
                         >
-
-                            <FaBoxOpen />
-
+                          <FaBoxOpen />
                         </button>
+
                       )}
 
                       {!debt.isPaid && (
+
                         <button
-                            className="icon-button"
-                            onClick={(e) => {
+                          type="button"
+                          className="icon-button"
+                          onClick={(e) => {
 
-                                e.stopPropagation();
+                            e.stopPropagation();
 
-                                openPaymentModal(debt);
+                            openPaymentModal(debt);
 
-                            }}
-                            title="Registrar pagamento"
+                          }}
+                          title="Registrar pagamento"
+                          aria-label="Registrar pagamento"
                         >
-
-                            <FaMoneyBillWave />
-
+                          <FaMoneyBillWave />
                         </button>
+
                       )}
 
                     </div>
-                  </li>
+
+                  </div>
+
+                </article>
 
               ))}
 
-            </ul>
+            </div>
 
           )}
 
@@ -317,7 +362,7 @@ export default function Dashboard() {
           {closedDebts.length === 0 ? (
 
             <p className="empty-text">
-              Nenhuma pedido fechado.
+              Nenhum pedido fechado.
             </p>
 
           ) : (
