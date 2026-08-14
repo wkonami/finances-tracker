@@ -18,6 +18,8 @@ import PaymentModal from '../components/PaymentModal';
 
 import api from '../services/api';
 
+import ThemeToggle from '../components/ThemeToggle';
+
 import '../App.css';
 
 export default function Dashboard() {
@@ -116,34 +118,32 @@ export default function Dashboard() {
     <div className="container">
 
       <header className="top-bar">
-
         <div>
-
           <h1 className="title">
             Rastreador de Finanças
           </h1>
-
           <div className="logged-user">
             <strong>{username}</strong>
             <br />
             {role}
           </div>
-
         </div>
-        {role === 'ADMIN' && (
-          <Link to="/users">
-            <button className="button">
-              Usuários
-            </button>
-          </Link>
-        )}
-        <button
-          className="button"
-          onClick={logout}
-        >
-          Sair
-        </button>
-
+        <div className="header-actions">
+          {role === 'ADMIN' && (
+            <Link to="/users">
+              <button className="button">
+                Usuários
+              </button>
+            </Link>
+          )}
+          <ThemeToggle />
+          <button
+            className="button"
+            onClick={logout}
+          >
+            Sair
+          </button>
+        </div>
       </header>
 
       {summary && (
