@@ -51,22 +51,140 @@ export default function DebtDetails() {
 
     const quickItems = [
     'Colar',
-    'Pulseira',
     'Brinco',
-    'Enfeite de Cabelo'
+    'Kanzashi'
   ];
 
+  const [showEditDebtModal, setShowEditDebtModal] = useState(false);
+
+  const [editDebtorName, setEditDebtorName] = useState('');
+
+  const [editTotalAmount, setEditTotalAmount] = useState('');
+
+  const [editDebtNotes, setEditDebtNotes] = useState('');
+
   function addPaymentNote(item) {
-    setNote((prev) =>
-      prev.trim() === '' ? item : `${prev}\n${item}`
-    );
+    setNote((prev) => {
+      const lines = prev
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      const index = lines.findIndex(line =>
+        line.toLowerCase().includes(item.toLowerCase())
+      );
+
+      if (index === -1) {
+        return prev.trim()
+          ? `${prev}\n${item}`
+          : item;
+      }
+
+      const currentLine = lines[index];
+
+      const match = currentLine.match(/^(\d+)\s+(.+)$/);
+
+      if (match) {
+        const quantity = Number(match[1]) + 1;
+        lines[index] = `${quantity} ${match[2]}`;
+      } else {
+        lines[index] = `2 ${currentLine}`;
+      }
+
+      return lines.join('\n');
+    });
   }
 
   function addEditNote(item) {
-    setEditNote((prev) =>
-      prev.trim() === '' ? item : `${prev}\n${item}`
+    setEditNote((prev) => {
+      const lines = prev
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      const index = lines.findIndex(line =>
+        line.toLowerCase().includes(item.toLowerCase())
+      );
+
+      if (index === -1) {
+        return prev.trim()
+          ? `${prev}\n${item}`
+          : item;
+      }
+
+      const currentLine = lines[index];
+
+      const match = currentLine.match(/^(\d+)\s+(.+)$/);
+
+      if (match) {
+        const quantity = Number(match[1]) + 1;
+        lines[index] = `${quantity} ${match[2]}`;
+      } else {
+        lines[index] = `2 ${currentLine}`;
+      }
+
+      return lines.join('\n');
+    });
+  } 
+
+  function openEditDebtModal() {
+    setEditDebtorName(debt.debtorName || '');
+    setEditTotalAmount(
+      Number(debt.totalAmount).toFixed(2)
     );
-  }  
+    setEditDebtNotes(debt.notes || '');
+
+    setShowEditDebtModal(true);
+  }
+
+  function closeEditDebtModal() {
+    setShowEditDebtModal(false);
+  }
+
+  async function saveDebtEdit() {
+
+    if (!editDebtorName.trim()) {
+      alert('Informe o nome do devedor.');
+      return;
+    }
+
+    const total = Number(editTotalAmount);
+
+    if (isNaN(total) || total <= 0) {
+      alert('Informe um valor total válido.');
+      return;
+    }
+
+    if (total < Number(debt.totalPaid)) {
+      alert(
+        'O valor total não pode ser menor que o valor já pago.'
+      );
+      return;
+    }
+
+    try {
+
+      await api.put(`/debts/${id}`, {
+        debtorName: editDebtorName.trim(),
+        totalAmount: total,
+        notes: editDebtNotes
+      });
+
+      closeEditDebtModal();
+
+      await fetchDebt();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        error.response?.data?.message ||
+        'Erro ao editar pedido.'
+      );
+
+    }
+  }
 
   const fetchDebt = useCallback(async () => {
 
@@ -265,6 +383,7 @@ export default function DebtDetails() {
   }
 
   const isClosed =
+    debt.delivered &&
     Number(debt.totalOpen) <= 0;
 
   return (
@@ -306,23 +425,27 @@ export default function DebtDetails() {
 
           </div>
 
-          <div
-            className={
-              isClosed
-                ? 'badge success'
-                : 'badge danger'
-            }
-          >
+          <div className="details-header-actions">
 
-            {
+            <button
+              className="button secondary small"
+              onClick={openEditDebtModal}
+            >
+              Editar pedido
+            </button>
 
-              isClosed
-                ? 'Quitada'
-                : 'Em aberto'
-
-            }
+            <div
+              className={
+                isClosed
+                  ? 'badge success'
+                  : 'badge danger'
+              }
+            >
+              {isClosed ? 'Quitada' : 'Em aberto'}
+            </div>
 
           </div>
+
 
         </header>
 
@@ -581,20 +704,12 @@ export default function DebtDetails() {
                                 <button
                                   type="submit"
                                   className="button"
-                                  onClick={() =>
-
-                                    saveEdit(
-                                      payment.id
-                                    )
-
-                                  }
                                 >
-
                                   Salvar
-
                                 </button>
 
                                 <button
+                                  type="button"
                                   className="button secondary"
                                   onClick={cancelEdit}
                                 >
@@ -748,6 +863,119 @@ export default function DebtDetails() {
 
       </div>
 
+      {showEditDebtModal && (
+
+        <div
+          className="modal-overlay"
+          onClick={closeEditDebtModal}
+        >
+
+          <div
+            className="edit-debt-modal card"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <h3>
+              Editar pedido
+            </h3>
+
+            <div className="form-group">
+
+              <label>
+                Devedor
+              </label>
+
+              <input
+                className="field"
+                type="text"
+                value={editDebtorName}
+                onChange={(e) =>
+                  setEditDebtorName(e.target.value)
+                }
+                maxLength={100}
+              />
+
+            </div>
+
+            <div className="form-group">
+
+              <label>
+                Valor total
+              </label>
+
+              <input
+                className="field"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={editTotalAmount}
+                onChange={(e) =>
+                  setEditTotalAmount(e.target.value)
+                }
+              />
+
+            </div>
+
+            <div className="form-group">
+
+              <label>
+                Observações
+              </label>
+
+              <textarea
+                className="field"
+                value={editDebtNotes}
+                onChange={(e) =>
+                  setEditDebtNotes(e.target.value)
+                }
+                maxLength={1000}
+                rows={6}
+              />
+
+            </div>
+
+            <div className="quick-items">
+
+              {quickItems.map((item) => (
+
+                <button
+                  key={item}
+                  type="button"
+                  className="quick-item-button"
+                  onClick={() => addEditNote(item)}
+                >
+                  {item}
+                </button>
+
+              ))}
+
+            </div>
+
+            <div className="modal-buttons">
+
+              <button
+                type="button"
+                className="button secondary"
+                onClick={closeEditDebtModal}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="button"
+                onClick={saveDebtEdit}
+              >
+                Salvar alterações
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
     </div>
 
   );

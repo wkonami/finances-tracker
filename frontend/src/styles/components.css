@@ -582,6 +582,53 @@
 }
 
 /* ==========================================================
+   EDIT DEBT MODAL
+========================================================== */
+
+.edit-debt-modal {
+    width: min(100% - 2rem, 520px);
+
+    padding: 1.5rem;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 1rem;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.edit-debt-modal h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.edit-debt-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+.edit-debt-modal label {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.edit-debt-modal textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.details-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================
    THEME TOGGLE
 ========================================================== */
 

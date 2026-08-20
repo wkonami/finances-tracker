@@ -73,6 +73,37 @@ function validateNotes(notes) {
   };
 }
 
+function validateDebtorName(name) {
+
+  if (
+    typeof name !== 'string' ||
+    !name.trim()
+  ) {
+    return {
+      valid: false,
+      message: 'Nome é obrigatório'
+    };
+  }
+
+  const trimmedName = name.trim();
+
+  if (
+    trimmedName.length >
+    MAX_DEBTOR_NAME_LENGTH
+  ) {
+    return {
+      valid: false,
+      message:
+        `O nome deve possuir no máximo ${MAX_DEBTOR_NAME_LENGTH} caracteres`
+    };
+  }
+
+  return {
+    valid: true,
+    value: trimmedName
+  };
+}
+
 async function createDebt(req, res) {
 
   try {
@@ -83,28 +114,13 @@ async function createDebt(req, res) {
       notes
     } = req.body;
 
-    if (
-      typeof debtorName !== 'string' ||
-      !debtorName.trim()
-    ) {
+    const nameValidation =
+      validateDebtorName(debtorName);
+
+    if (!nameValidation.valid) {
 
       return res.status(400).json({
-        message: 'Nome é obrigatório'
-      });
-
-    }
-
-    const trimmedDebtorName =
-      debtorName.trim();
-
-    if (
-      trimmedDebtorName.length >
-      MAX_DEBTOR_NAME_LENGTH
-    ) {
-
-      return res.status(400).json({
-        message:
-          `O nome deve possuir no máximo ${MAX_DEBTOR_NAME_LENGTH} caracteres`
+        message: nameValidation.message
       });
 
     }
@@ -147,13 +163,11 @@ async function createDebt(req, res) {
 
       data: {
 
-        debtorName: trimmedDebtorName,
+        debtorName: nameValidation.value,
 
-        totalAmount:
-          amountValidation.amount,
+        totalAmount: amountValidation.amount,
 
-        notes:
-          notesValidation.value,
+        notes: notesValidation.value,
 
         userId: req.user.id
 
@@ -222,8 +236,11 @@ async function listDebts(req, res) {
           Number(debt.totalAmount) -
           totalPaid;
 
+        const normalizedTotalOpen = 
+          Math.max(totalOpen, 0);
+
         const isPaid =
-          totalOpen <= 0;
+          normalizedTotalOpen <= 0;
 
         const isClosed =
           debt.delivered &&
@@ -235,7 +252,8 @@ async function listDebts(req, res) {
 
           totalPaid,
 
-          totalOpen,
+          totalOpen:
+            normalizedTotalOpen,
 
           isPaid,
 
@@ -364,8 +382,11 @@ async function getDebt(req, res) {
       Number(debt.totalAmount) -
       totalPaid;
 
+    const normalizedTotalOpen = 
+      Math.max(totalOpen, 0);
+
     const isPaid =
-      totalOpen <= 0;
+      normalizedTotalOpen <= 0;
 
     const isClosed =
       debt.delivered &&
@@ -429,6 +450,10 @@ async function updateDebt(req, res) {
 
           deletedAt: null
 
+        },
+
+        include: {
+          payments: true
         }
 
       });
@@ -442,11 +467,28 @@ async function updateDebt(req, res) {
     }
 
     const {
+      debtorName,
       totalAmount,
       notes
     } = req.body;
 
     const data = {};
+
+    if (debtorName !== undefined) {
+      const nameValidation =
+        validateDebtorName(
+          debtorName
+        );
+      
+      if (!nameValidation.valid) {
+        return res.status(400).json({
+          message:
+            nameValidation.message
+        });
+      }
+      data.debtorName =
+        nameValidation.value;
+    }
 
     if (totalAmount !== undefined) {
 
@@ -459,6 +501,19 @@ async function updateDebt(req, res) {
           message: amountValidation.message
         });
 
+      }
+
+      const totalPaid =
+        debt.payments.reduce(
+          (sum, payment) =>
+            sum + Number(payment.amount),
+          0
+      );
+
+      if (amountValidation.amount < totalPaid) {
+        return res.status(400).json({
+          message: `O valor total não pode ser menor que o valor já pago (R$ ${totalPaid.toFixed(2)})`
+        })
       }
 
       data.totalAmount =
@@ -482,6 +537,12 @@ async function updateDebt(req, res) {
       data.notes =
         notesValidation.value;
 
+    }
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({
+        message: 'Nenhuma alteração foi informada'
+      });
     }
 
     const updated =

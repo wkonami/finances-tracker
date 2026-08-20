@@ -14,10 +14,10 @@ export default function NewDebt() {
   const [notes, setNotes] = useState('');
 
   const quickItems = [
+    'Feira',
     'Colar',
-    'Pulseira',
     'Brinco',
-    'Enfeite de Cabelo'
+    'Kanzashi'
   ];
 
   function addNote(item) {
