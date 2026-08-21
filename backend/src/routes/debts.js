@@ -17,7 +17,8 @@ const {
 const {
   addPayment,
   listPayments,
-  updatePayment
+  updatePayment,
+  deletePayment
 } = require('../controllers/paymentController');
 
 router.use(authMiddleware);
@@ -35,6 +36,7 @@ router.get('/:id/payments', listPayments);
 
 router.put('/payments/:paymentId', updatePayment);
 
+router.delete('/payments/:paymentId', deletePayment);
 
 // detalhes da dívida
 router.get('/:id', getDebt);

@@ -934,23 +934,6 @@ export default function DebtDetails() {
 
             </div>
 
-            <div className="quick-items">
-
-              {quickItems.map((item) => (
-
-                <button
-                  key={item}
-                  type="button"
-                  className="quick-item-button"
-                  onClick={() => addEditNote(item)}
-                >
-                  {item}
-                </button>
-
-              ))}
-
-            </div>
-
             <div className="modal-buttons">
 
               <button

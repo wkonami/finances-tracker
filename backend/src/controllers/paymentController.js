@@ -548,8 +548,74 @@ async function listPayments(req, res) {
 
 }
 
+async function deletePayment(req, res) {
+
+  try {
+
+    const paymentId = Number(req.params.paymentId);
+
+    if (!Number.isInteger(paymentId) || paymentId <= 0) {
+      return res.status(400).json({
+        message: 'ID do pagamento inválido'
+      });
+    }
+
+    const payment = await prisma.payment.findUnique({
+      where: {
+        id: paymentId
+      },
+      include: {
+        debt: true
+      }
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        message: 'Pagamento não encontrado'
+      });
+    }
+
+    if (
+      payment.debt.userId !== req.user.id ||
+      payment.debt.deletedAt !== null
+    ) {
+      return res.status(404).json({
+        message: 'Pagamento não encontrado'
+      });
+    }
+
+    await prisma.payment.delete({
+      where: {
+        id: paymentId
+      }
+    });
+
+    return res.json({
+      message: 'Pagamento excluído com sucesso'
+    });
+
+  } catch (error) {
+
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id,
+      paymentId: req.params.paymentId
+    });
+
+    return res.status(500).json({
+      message: 'Erro interno ao excluir pagamento'
+    });
+
+  }
+
+}
+
 module.exports = {
   addPayment,
   listPayments,
-  updatePayment
+  updatePayment,
+  deletePayment
 };
