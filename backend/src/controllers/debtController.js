@@ -398,7 +398,7 @@ async function getDebt(req, res) {
 
       totalPaid,
 
-      totalOpen,
+      totalOpen: normalizedTotalOpen,
 
       isPaid,
 
@@ -731,11 +731,92 @@ async function markAsDelivered(req, res) {
 
 }
 
+async function markAsNotDelivered(req, res) {
+
+  try {
+
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+
+      return res.status(400).json({
+        message: 'ID da dívida inválido'
+      });
+
+    }
+
+    const debt =
+      await prisma.debt.findFirst({
+
+        where: {
+
+          id,
+
+          userId: req.user.id,
+
+          deletedAt: null
+
+        }
+
+      });
+
+    if (!debt) {
+
+      return res.status(404).json({
+        message: 'Dívida não encontrada'
+      });
+
+    }
+
+    if (!debt.delivered) {
+
+      return res.status(400).json({
+        message:
+          'Esta dívida não está marcada como entregue.'
+      });
+
+    }
+
+    const updatedDebt =
+      await prisma.debt.update({
+
+        where: {
+          id
+        },
+
+        data: {
+          delivered: false
+        }
+
+      });
+
+    return res.json(updatedDebt);
+
+  } catch (error) {
+
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
+
+    return res.status(500).json({
+      message:
+        'Erro interno ao desmarcar dívida como entregue'
+    });
+
+  }
+
+}
+
 module.exports = {
   createDebt,
   listDebts,
   getDebt,
   updateDebt,
   deleteDebt,
-  markAsDelivered
+  markAsDelivered,
+  markAsNotDelivered
 };

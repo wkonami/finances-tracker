@@ -216,6 +216,29 @@ export default function DebtDetails() {
     }
   }, [debt]);
 
+  async function markAsNotDelivered() {
+
+    try {
+
+      await api.patch(
+        `/debts/${id}/not-delivered`
+      );
+
+      await fetchDebt();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        error.response?.data?.message ||
+        'Erro ao desmarcar como entregue'
+      );
+
+    }
+
+  }
+
   async function deleteCurrentDebt() {
 
     const confirmed = window.confirm(
@@ -433,6 +456,15 @@ export default function DebtDetails() {
             >
               Editar pedido
             </button>
+
+            {debt.delivered && (
+              <button
+                className="button secondary small"
+                onClick={markAsNotDelivered}
+              >
+                Desmarcar entrega
+              </button>
+            )}
 
             <div
               className={

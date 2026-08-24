@@ -350,6 +350,12 @@
     flex:1 1 180px;
 }
 
+.payment-note-text {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  margin-top: .25rem;
+}
+
 .modal-overlay{
 
     position:fixed;
@@ -626,6 +632,11 @@
     align-items: center;
     gap: .75rem;
     flex-wrap: wrap;
+}
+
+.details-notes {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 /* ==========================================================

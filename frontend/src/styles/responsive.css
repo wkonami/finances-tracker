@@ -12,6 +12,13 @@
         font-size:1.45rem;
     }
 
+    .debts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .debt-card {
+        min-height: 180px;
+    }
 }
 
 @media (prefers-reduced-motion:reduce){

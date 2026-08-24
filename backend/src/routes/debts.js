@@ -11,7 +11,8 @@ const {
   getDebt,
   updateDebt,
   deleteDebt,
-  markAsDelivered
+  markAsDelivered,
+  markAsNotDelivered
 } = require('../controllers/debtController');
 
 const {
@@ -42,6 +43,8 @@ router.delete('/payments/:paymentId', deletePayment);
 router.get('/:id', getDebt);
 
 router.patch('/:id/delivered', markAsDelivered);
+
+router.patch('/:id/not-delivered', markAsNotDelivered);
 
 router.put('/:id', updateDebt);
 
