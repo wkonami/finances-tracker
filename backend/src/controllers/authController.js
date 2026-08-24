@@ -2,7 +2,7 @@ const prisma = require('../prismaClient');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mudar_ja';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 async function login(req, res) {
   try {
