@@ -17,6 +17,7 @@ import Dashboard from './pages/Dashboard';
 import NewDebt from './pages/NewDebt';
 import DebtDetails from './pages/DebtDetails';
 import Users from './pages/Users';
+import Register from './pages/Register';
 
 import './App.css';
 
@@ -152,6 +153,11 @@ export default function App() {
               <Users />
             </AdminRoute>
           }
+        />
+
+        <Route
+          path="/register"
+          element={<Register/>}
         />
 
         <Route
