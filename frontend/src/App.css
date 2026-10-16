@@ -270,21 +270,117 @@
    USERS
 ========================================================== */
 
-.table-wrapper{
-    overflow-x:auto;
+.users-page {
+    padding-bottom: 2rem;
 }
 
-.users-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:1.5rem;
-    min-width:700px;
+.users-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.users-table button{
-    margin-right:.5rem;
+.users-header > div {
+    flex: 1;
+    min-width: 0;
 }
 
+.users-header .title {
+    margin-bottom: .5rem;
+}
+
+.users-section-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.users-section-header .section-title {
+    margin-bottom: 0;
+}
+
+.users-edit-badge,
+.users-count {
+    display: inline-flex;
+    align-items: center;
+    padding: .4rem .75rem;
+    border-radius: var(--radius-sm);
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.users-edit-badge {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.users-count {
+    background: var(--color-surface-hover);
+    color: var(--color-text-secondary);
+}
+
+.users-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: 1.5rem;
+}
+
+.users-form-actions .button {
+    flex: 0 1 auto;
+}
+
+.users-table {
+    min-width: 700px;
+}
+
+.users-table .users-actions-column {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.users-username {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.users-role {
+    display: inline-flex;
+    align-items: center;
+    padding: .35rem .65rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.users-role-admin {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.users-role-user {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.users-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.users-row-actions .button {
+    min-height: 38px;
+    padding: .55rem .8rem;
+    font-size: .85rem;
+}
 /* ==========================================================
    LOADING
 ========================================================== */

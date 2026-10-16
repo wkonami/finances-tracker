@@ -19,6 +19,37 @@
     .debt-card {
         min-height: 180px;
     }
+
+    .users-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .users-header > .button {
+        width: 100%;
+    }
+
+    .users-section-header {
+        align-items: flex-start;
+    }
+
+    .users-form-actions {
+        flex-direction: column;
+    }
+
+    .users-form-actions .button {
+        width: 100%;
+    }
+
+    .users-row-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .users-row-actions .button {
+        width: 100%;
+    }
+
 }
 
 @media (prefers-reduced-motion:reduce){

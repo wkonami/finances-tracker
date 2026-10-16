@@ -13,423 +13,338 @@ import '../App.css';
 export default function Users() {
 
   const [users, setUsers] = useState([]);
-
   const [editingUser, setEditingUser] = useState(null);
 
   const [username, setUsername] = useState('');
-
   const [password, setPassword] = useState('');
-
   const [role, setRole] = useState('USER');
 
   const navigate = useNavigate();
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const loadUsers = useCallback(async () => {
+    setLoading(true);
 
     try {
 
       const { data } = await api.get('/users');
 
-      setUsers(data);
-
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error('Erro ao carregar usuários', error);
 
-      console.error(error);
-
-      alert('Erro ao carregar usuários.');
-
+      alert(
+        error.response?.data?.message ||
+        'Erro ao carregar usuários.'
+      );
+    } finally {
+      setLoading(false);
     }
-
   }, []);
 
   useEffect(() => {
-
     loadUsers();
-
   }, [loadUsers]);
 
   function clearForm() {
-
     setEditingUser(null);
-
     setUsername('');
-
     setPassword('');
-
     setRole('USER');
-
   }
 
   async function handleSubmit(e) {
-
     e.preventDefault();
 
+    const normalizedUsername = username.trim();
+
+    if (!normalizedUsername) {
+      alert('Informe o nome do usuário.');
+      return;
+    }
+
+    if (!editingUser && !password) {
+      alert('Informe uma senha para o usuário');
+      return;
+    }
+
+    const payload = {
+      username: normalizedUsername,
+      role,
+    };
+
+    //apenas envia a senha se uma nova for informada
+    if (password) {
+      payload.password = password;
+    }
+
+    setSaving(true);
+
     try {
-
       if (editingUser) {
+        await api.put(`/users/${editingUser.id}`, payload);
 
-        await api.put(
-
-          `/users/${editingUser.id}`,
-
-          {
-            username,
-            password,
-            role
-          }
-
-        );
-
+        alert('Usuário atualizado com sucesso.');
       } else {
+        await api.post('/users', payload);
 
-        await api.post(
-
-          '/users',
-
-          {
-            username,
-            password,
-            role
-          }
-
-        );
-
+        alert('Usuário cadastrado com sucesso.');
       }
 
       clearForm();
-
-      loadUsers();
-
+      await loadUsers();
     } catch (error) {
-
-      console.error(error);
+      console.error('Erro ao salvar o usuário', error);
 
       alert(
-
         error.response?.data?.message ||
-
         'Erro ao salvar usuário.'
-
       );
-
+    } finally {
+      setSaving(false);
     }
-
   }
 
   function editUser(user) {
-
     setEditingUser(user);
-
     setUsername(user.username);
-
     setPassword('');
-
     setRole(user.role);
-
   }
 
   async function deleteUser(id) {
-
     const confirmed = window.confirm(
-
       'Deseja arquivar este usuário?'
-
     );
 
     if (!confirmed) {
-
       return;
-
     }
 
     try {
-
       await api.delete(`/users/${id}`);
 
-      loadUsers();
+      alert('Usuário arquivado com sucesso.');
 
+      if (editingUser?.id === id) {
+        clearForm();
+      }
+
+      await loadUsers();
     } catch (error) {
+      console.error('Erro ao arquivar usuário', error);
 
-      console.error(error);
-
-      alert('Erro ao excluir usuário.');
-
+      alert(
+        error.response?.data?.message ||
+        'Erro ao arquivar usuário.'
+      );
     }
-
   }
 
   return (
+    <main className="container users-page">
+      <header className="users-header">
+        <div>
+          <h1 className="title">
+            Manutenção de Usuários
+          </h1>
 
-    <div className="container">
-      <button
-        className="button"
-        onClick={() => navigate('/dashboard')}
-      >
-        Home
-      </button>
-      <h1 className="title">
+          <p className="empty-text">
+            Gerencie os acessos e os perfis dos usuários do sistema.
+          </p>
+        </div>
 
-        Manutenção de Usuários
-
-      </h1>
-
-      <div className="page-card">
-
-        <h2 className="section-title">
-
-          {
-
-            editingUser
-
-              ? 'Editar usuário'
-
-              : 'Novo usuário'
-
-          }
-
-        </h2>
-
-        <form
-          onSubmit={handleSubmit}
+        <button
+          className="button secondary"
+          type="button"
+          onClick={() => navigate('/dashboard')}
         >
+          Voltar ao dashboard
+        </button>
+      </header>
 
-          <input
-            placeholder="Usuário"
-            value={username}
-            onChange={(e) =>
+      <section className="page-card users-form-card mb-3">
+        <div className="users-section-header">
+          <h2 className="section-title">
+            {editingUser ? 'Editar usuário' : 'Novo usuário'}
+          </h2>
 
-              setUsername(
-                e.target.value
-              )
+          {editingUser && (
+            <span className="users-edit-badge">
+              Editando: {editingUser.username}
+            </span>
+          )}
+        </div>
 
-            }
-            required
-          />
+        <form onSubmit={handleSubmit}>
+          <div className="field-row">
+            <div className="field-group">
+              <label htmlFor="username">
+                Nome de usuário
+              </label>
 
-          <input
-            type="password"
-            placeholder={
+              <input
+                id="username"
+                className="field"
+                type="text"
+                placeholder="Digite o nome de usuário"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
 
-              editingUser
+            <div className="field-group">
+              <label htmlFor="password">
+                {editingUser ? 'Nova senha' : 'Senha'}
+              </label>
 
-                ? 'Nova senha (opcional)'
+              <input
+                id="password"
+                className="field"
+                type="password"
+                placeholder={
+                  editingUser
+                    ? 'Deixe em branco para manter a atual'
+                    : 'Digite uma senha'
+                }
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required={!editingUser}
+              />
+            </div>
 
-                : 'Senha'
+            <div className="field-group">
+              <label htmlFor="role">
+                Perfil de acesso
+              </label>
 
-            }
-            value={password}
-            onChange={(e) =>
+              <select
+                id="role"
+                className="field"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="USER">Usuário</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </div>
+          </div>
 
-              setPassword(
-                e.target.value
-              )
-
-            }
-            required={!editingUser}
-          />
-
-          <select
-
-            value={role}
-
-            onChange={(e) =>
-
-              setRole(
-                e.target.value
-              )
-
-            }
-
-          >
-
-            <option value="USER">
-
-              USER
-
-            </option>
-
-            <option value="ADMIN">
-
-              ADMIN
-
-            </option>
-
-          </select>
-
-          <div className="details-actions">
-
+          <div className="users-form-actions">
             <button
               className="button"
               type="submit"
+              disabled={saving}
             >
-
-              {
-
-                editingUser
-
+              {saving
+                ? 'Salvando...'
+                : editingUser
                   ? 'Salvar alterações'
-
-                  : 'Cadastrar'
-
-              }
-
+                  : 'Cadastrar usuário'}
             </button>
 
-            {
-
-              editingUser && (
-
-                <button
-
-                  type="button"
-
-                  className="button button-secondary"
-
-                  onClick={clearForm}
-
-                >
-
-                  Cancelar
-
-                </button>
-
-              )
-
-            }
-
+            {editingUser && (
+              <button
+                className="button secondary"
+                type="button"
+                onClick={clearForm}
+                disabled={saving}
+              >
+                Cancelar edição
+              </button>
+            )}
           </div>
-
         </form>
+      </section>
 
-      </div>
+      <section className="page-card users-list-card">
+        <div className="users-section-header">
+          <h2 className="section-title">
+            Usuários cadastrados
+          </h2>
 
-      <div
-        className="page-card"
-        style={{ marginTop: 25 }}
-      >
+          <span className="users-count">
+            {users.length}{' '}
+            {users.length === 1 ? 'usuário' : 'usuários'}
+          </span>
+        </div>
 
-        <h2 className="section-title">
+        {loading ? (
+          <p className="empty-text">
+            Carregando usuários...
+          </p>
+        ) : users.length === 0 ? (
+          <p className="empty-text">
+            Nenhum usuário encontrado.
+          </p>
+        ) : (
+          <div className="table-wrapper">
+            <table className="table users-table">
+              <thead>
+                <tr>
+                  <th>Usuário</th>
+                  <th>Perfil</th>
+                  <th className="users-actions-column">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
 
-          Usuários cadastrados
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <span className="users-username">
+                        {user.username}
+                      </span>
+                    </td>
 
-        </h2>
-
-        {
-
-          users.length === 0
-
-            ? (
-
-              <p>
-
-                Nenhum usuário encontrado.
-
-              </p>
-
-            )
-
-            : (
-
-              <table className="users-table">
-
-                <thead>
-
-                  <tr>
-
-                    <th>
-
-                      Usuário
-
-                    </th>
-
-                    <th>
-
-                      Perfil
-
-                    </th>
-
-                    <th>
-
-                      Ações
-
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {
-
-                    users.map((user) => (
-
-                      <tr
-                        key={user.id}
+                    <td>
+                      <span
+                        className={`users-role ${
+                          user.role === 'ADMIN'
+                            ? 'users-role-admin'
+                            : 'users-role-user'
+                        }`}
                       >
+                        {user.role === 'ADMIN'
+                          ? 'Administrador'
+                          : 'Usuário'}
+                      </span>
+                    </td>
 
-                        <td>
+                    <td>
+                      <div className="users-row-actions">
+                        <button
+                          className="button secondary"
+                          type="button"
+                          onClick={() => editUser(user)}
+                        >
+                          Editar
+                        </button>
 
-                          {user.username}
-
-                        </td>
-
-                        <td>
-
-                          {user.role}
-
-                        </td>
-
-                        <td>
-
-                          <button
-                            className="button"
-                            onClick={() =>
-
-                              editUser(user)
-
-                            }
-                          >
-
-                            Editar
-
-                          </button>
-
-                          {' '}
-
-                          <button
-                            className="button danger"
-                            onClick={() =>
-
-                              deleteUser(user.id)
-
-                            }
-                          >
-
-                            Excluir
-
-                          </button>
-
-                        </td>
-
-                      </tr>
-
-                    ))
-
-                  }
-
-                </tbody>
-
-              </table>
-
-            )
-
-        }
-
-      </div>
-
-    </div>
-
+                        <button
+                          className="button danger"
+                          type="button"
+                          onClick={() => deleteUser(user.id)}
+                        >
+                          Arquivar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </main>
   );
 
 }
