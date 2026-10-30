@@ -42,10 +42,6 @@
     padding:1.25rem;
 }
 
-.summary-card{
-    padding:1.2rem;
-}
-
 .summary-label{
     display:block;
     margin-bottom:.4rem;
@@ -169,10 +165,6 @@
     width:min(700px,100%);
     margin:2.5rem auto;
     padding:1.5rem;
-}
-
-.new-debt-form{
-    padding:2rem;
 }
 
 .new-debt-form{
@@ -394,12 +386,12 @@
 }
 
 
+
 /* =========================================
-   DASHBOARD - ESTRUTURA PRINCIPAL
+   ESTRUTURA PRINCIPAL
 ========================================= */
 
 .app-layout {
-  display: flex;
   min-height: 100vh;
   background: var(--color-background);
 }
@@ -409,15 +401,24 @@
 ========================================= */
 
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+
   width: 250px;
-  min-width: 250px;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+
   display: flex;
   flex-direction: column;
+
   padding: 24px 16px 16px;
+
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
-  position: relative;
+
+  overflow: hidden;
   z-index: 20;
 }
 
@@ -427,6 +428,7 @@
   gap: 12px;
   padding: 0 8px;
   margin-bottom: 42px;
+  flex-shrink: 0;
 }
 
 .sidebar-brand-icon {
@@ -467,6 +469,11 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sidebar-link {
@@ -475,11 +482,14 @@
   gap: 13px;
   min-height: 44px;
   padding: 0 12px;
+  flex-shrink: 0;
+
   border-radius: 8px;
   color: var(--color-text-secondary);
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
+
   transition: background 0.2s, color 0.2s;
 }
 
@@ -498,11 +508,13 @@
   align-items: center;
   justify-content: center;
   width: 18px;
+  flex-shrink: 0;
   font-size: 15px;
 }
 
 .sidebar-admin {
   margin-top: 35px;
+  flex-shrink: 0;
 }
 
 .sidebar-footer {
@@ -510,8 +522,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+
   margin-top: auto;
   padding: 18px 5px 0;
+  flex-shrink: 0;
+
   border-top: 1px solid var(--color-border);
 }
 
@@ -562,11 +577,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+
   border: none;
   border-radius: 8px;
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
+
   transition: background 0.2s, color 0.2s;
 }
 
@@ -580,8 +597,9 @@
 ========================================= */
 
 .main-content {
-  flex: 1;
   min-width: 0;
+  min-height: 100vh;
+  margin-left: 250px;
   padding: 30px 36px;
 }
 
@@ -963,14 +981,12 @@
   }
 }
 
+
 @media (max-width: 768px) {
   .sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
     width: 260px;
     min-width: 260px;
+
     transform: translateX(-100%);
     transition: transform 0.25s ease;
   }
@@ -990,6 +1006,7 @@
 
   .main-content {
     width: 100%;
+    margin-left: 0;
     padding: 22px 16px;
   }
 
@@ -1013,6 +1030,33 @@
   .dashboard-charts,
   .dashboard-bottom-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sales-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sales-toolbar .button {
+    width: 100%;
+  }
+
+  .sales-status-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-card-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sales-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sales-card-footer .debt-actions {
+    width: 100%;
   }
 }
 

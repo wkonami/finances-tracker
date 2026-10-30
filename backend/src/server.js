@@ -10,6 +10,8 @@ const authRoutes = require('./routes/auth');
 
 const debtRoutes = require('./routes/debts');
 
+const purchaseRoutes = require('./routes/purchaseRoutes');
+
 const userRoutes = require('./routes/users');
 
 const FRONTEND_ORIGIN =
@@ -38,6 +40,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 app.use('/api/debts', debtRoutes);
+
+app.use('/api/purchases', purchaseRoutes);
 
 app.use('/api/users', userRoutes);
 
