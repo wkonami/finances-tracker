@@ -1,3 +1,4 @@
+
 import React, {
   useEffect,
   useState
@@ -7,7 +8,8 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Navigate
+  Navigate,
+  Outlet
 } from 'react-router-dom';
 
 import api from './services/api';
@@ -18,41 +20,38 @@ import NewDebt from './pages/NewDebt';
 import DebtDetails from './pages/DebtDetails';
 import Users from './pages/Users';
 import Register from './pages/Register';
+import Sales from './pages/Sales';
+
+import MainLayout from './layouts/MainLayout';
 
 import './App.css';
 
-function PrivateRoute({ children }) {
+function PrivateRoute() {
 
   const token = localStorage.getItem('token');
 
   if (!token) {
-
     return <Navigate to="/" replace />;
-
   }
 
-  return children;
+  return <Outlet />;
 
 }
 
-function AdminRoute({ children }) {
+function AdminRoute() {
 
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
 
   if (!token) {
-
     return <Navigate to="/" replace />;
-
   }
 
   if (role !== 'ADMIN') {
-
     return <Navigate to="/dashboard" replace />;
-
   }
 
-  return children;
+  return <Outlet />;
 
 }
 
@@ -87,7 +86,6 @@ export default function App() {
   if (loadingServer) {
 
     return (
-
       <div className="loading-screen">
 
         <div className="loading-box card">
@@ -103,7 +101,6 @@ export default function App() {
         </div>
 
       </div>
-
     );
 
   }
@@ -114,52 +111,57 @@ export default function App() {
 
       <Routes>
 
+        {/* Rotas públicas */}
         <Route
           path="/"
           element={<Login />}
         />
 
         <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/new"
-          element={
-            <PrivateRoute>
-              <NewDebt />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/debt/:id"
-          element={
-            <PrivateRoute>
-              <DebtDetails />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/users"
-          element={
-            <AdminRoute>
-              <Users />
-            </AdminRoute>
-          }
-        />
-
-        <Route
           path="/register"
-          element={<Register/>}
+          element={<Register />}
         />
 
+        {/* Rotas privadas */}
+        <Route element={<PrivateRoute />}>
+
+          <Route element={<MainLayout />}>
+
+            <Route 
+              path="/sales" 
+              element={<Sales />} 
+            />
+
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
+
+            <Route
+              path="/new"
+              element={<NewDebt />}
+            />
+
+            <Route
+              path="/debt/:id"
+              element={<DebtDetails />}
+            />
+
+            {/* Área administrativa */}
+            <Route element={<AdminRoute />}>
+
+              <Route
+                path="/users"
+                element={<Users />}
+              />
+
+            </Route>
+
+          </Route>
+
+        </Route>
+
+        {/* Rota inexistente */}
         <Route
           path="*"
           element={<Navigate to="/" replace />}

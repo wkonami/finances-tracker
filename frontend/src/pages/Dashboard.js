@@ -1,424 +1,346 @@
+
 import React, {
+  useCallback,
   useEffect,
-  useState,
-  useCallback
+  useState
 } from 'react';
 
 import {
-  Link,
-  useNavigate
+  NavLink
 } from 'react-router-dom';
 
 import {
-    FaBoxOpen,
-    FaMoneyBillWave
-} from "react-icons/fa";
-
-import PaymentModal from '../components/PaymentModal';
+  FaChartLine,
+  FaShoppingBag,
+  FaReceipt,
+  FaMoneyBillWave,
+  FaBoxOpen,
+  FaClock,
+  FaChartPie,
+  FaTruck,
+  FaWallet
+} from 'react-icons/fa';
 
 import api from '../services/api';
 
-import ThemeToggle from '../components/ThemeToggle';
-
 import '../App.css';
 
-export default function Dashboard() {
+const formatCurrency = (value) => {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+};
 
-  const navigate = useNavigate();
+export default function Dashboard() {
 
   const [summary, setSummary] = useState(null);
   const [debts, setDebts] = useState([]);
   const [closedDebts, setClosedDebts] = useState([]);
-  const [activeTab, setActiveTab] = useState('open');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedDebt, setSelectedDebt] = useState(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentNote, setPaymentNote] = useState('');
 
-  const role = localStorage.getItem('role');
-  const username = localStorage.getItem('username');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('username');
-
-    navigate('/');
-  }
-
-  async function markAsDelivered(id) {
+  const loadDashboard = useCallback(async () => {
 
     try {
 
-      await api.patch(`/debts/${id}/delivered`);
+      setLoading(true);
+      setError('');
 
-      loadDebts();
-
-    } catch (error) {
-
-      console.error(error);
-
-      alert("Erro ao marcar como entregue.");
-
-    }
-
-  }
-
-  function openPaymentModal(debt) {
-    setSelectedDebt(debt);
-    setPaymentAmount(Number(debt.totalOpen).toFixed(2));
-    setPaymentNote('');
-    setShowPaymentModal(true);
-  }
-
-  function closePaymentModal() {
-    setShowPaymentModal(false);
-    setSelectedDebt(null);
-  }
-
-  async function savePayment() {
-    if (!selectedDebt) return;
-    try {
-        await api.post(
-          `/debts/${selectedDebt.id}/payments`,
-          {
-            amount: Number(paymentAmount),
-            note: paymentNote
-          });
-        closePaymentModal();
-        loadDebts();
-    } catch (error) {
-        console.error(error);
-        alert(error.response?.data?.message ||
-            'Erro ao registrar pagamento.'
-        );
-    }
-
-  }
-
-  const loadDebts = useCallback(async () => {
-    try {
       const response = await api.get('/debts');
 
       setSummary(response.data.summary);
-      setDebts(response.data.debts);
+      setDebts(response.data.debts || []);
       setClosedDebts(response.data.closedDebts || []);
 
-    } catch (error) {
-      console.error(error);
-      alert('Erro ao carregar dívidas');
+    } catch (err) {
+
+      console.error(err);
+
+      setError('Não foi possível carregar os dados financeiros.');
+
+    } finally {
+
+      setLoading(false);
+
     }
+
   }, []);
 
   useEffect(() => {
-    loadDebts();
-  }, [loadDebts]);
+    loadDashboard();
+  }, [loadDashboard]);
+
+  const totalOrders = debts.length + closedDebts.length;
+
+  const indicators = [
+    {
+      title: 'Total a receber',
+      value: formatCurrency(summary?.totalOpen),
+      description: 'Valores pendentes de recebimento',
+      icon: <FaMoneyBillWave />,
+      color: 'primary'
+    },
+    {
+      title: 'Pedidos em aberto',
+      value: debts.length,
+      description: 'Pedidos ainda não finalizados',
+      icon: <FaShoppingBag />,
+      color: 'blue'
+    },
+    {
+      title: 'Entregas pendentes',
+      value: summary?.pendingDeliveries ?? 0,
+      description: 'Pedidos aguardando entrega',
+      icon: <FaBoxOpen />,
+      color: 'orange'
+    },
+    {
+      title: 'Aguardando pagamento',
+      value: summary?.awaitingPayment ?? 0,
+      description: 'Pedidos com saldo pendente',
+      icon: <FaClock />,
+      color: 'purple'
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        <div className="loading-spinner" />
+        <span>Carregando informações...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-error">
+        <p>{error}</p>
+
+        <button
+          type="button"
+          className="button"
+          onClick={loadDashboard}
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="container">
+    <div className="dashboard-content">
 
-      <header className="top-bar">
-        <div>
-          <h1 className="title">
-            Rastreador de Finanças
-          </h1>
-          <div className="logged-user">
-            <strong>{username}</strong>
-            <br />
-            {role}
+      {/* Indicadores */}
+      <section className="dashboard-section">
+
+        <div className="dashboard-section-heading">
+
+          <div>
+            <h2>Resumo financeiro</h2>
+            <p>Indicadores dos seus pedidos atuais.</p>
           </div>
-        </div>
-        <div className="header-actions">
-          {role === 'ADMIN' && (
-            <Link to="/users">
-              <button className="button">
-                Usuários
-              </button>
-            </Link>
-          )}
-          <ThemeToggle />
+
           <button
-            className="button"
-            onClick={logout}
+            type="button"
+            className="dashboard-refresh"
+            onClick={loadDashboard}
+            title="Atualizar informações"
           >
-            Sair
+            Atualizar
           </button>
+
         </div>
-      </header>
 
-      {summary && (
+        <div className="dashboard-indicators">
 
-        <section className="summary-box">
+          {indicators.map((indicator) => (
 
-          <article className="summary-item card">
+            <article
+              key={indicator.title}
+              className="dashboard-indicator card"
+            >
 
-            <span className="summary-label">
-              Total a receber
-            </span>
+              <div className="indicator-top">
 
-            <div className="summary-value danger">
-              R$ {Number(summary.totalOpen).toFixed(2)}
+                <span className="indicator-title">
+                  {indicator.title}
+                </span>
+
+                <div className={`indicator-icon ${indicator.color}`}>
+                  {indicator.icon}
+                </div>
+
+              </div>
+
+              <strong className="indicator-value">
+                {indicator.value}
+              </strong>
+
+              <span className="indicator-description">
+                {indicator.description}
+              </span>
+
+            </article>
+
+          ))}
+
+        </div>
+
+      </section>
+
+      {/* Gráficos */}
+      <section className="dashboard-charts">
+
+        <article className="dashboard-panel card">
+
+          <div className="dashboard-panel-header">
+
+            <div>
+              <h3>Fluxo financeiro</h3>
+              <p>Entradas e saídas do negócio</p>
             </div>
 
-          </article>
+            <FaChartLine />
 
-          <article
-            className="summary-item card"
-            onClick={() => setActiveTab('open')}
-          >
+          </div>
 
-            <span className="summary-label">
-              Entregas pendentes
-            </span>
+          <div className="chart-empty-state">
 
-            <div className="summary-value">
-              {summary.pendingDeliveries}
+            <div className="chart-empty-icon">
+              <FaChartLine />
             </div>
 
-          </article>
+            <strong>Dados financeiros em preparação</strong>
 
-          <article
-            className="summary-item card"
-            onClick={() => setActiveTab('open')}
-          >
-
-            <span className="summary-label">
-              Aguardando pagamento
-            </span>
-
-            <div className="summary-value">
-              {summary.awaitingPayment}
-            </div>
-
-          </article>
-
-        </section>
-
-      )}
-
-      <nav className="tabs">
-
-        <button
-          className="button"
-          onClick={() => setActiveTab('open')}
-        >
-          Abertos
-        </button>
-
-        <button
-          className="button"
-          onClick={() => setActiveTab('closed')}
-        >
-          Fechados
-        </button>
-
-        <Link to="/new">
-
-          <button className="button">
-            Novo
-          </button>
-
-        </Link>
-
-      </nav>
-
-      {activeTab === 'open' && (
-
-        <section className="debts-section">
-
-          <h2 className="section-title">
-            Abertos
-          </h2>
-
-          {debts.length === 0 ? (
-
-            <p className="empty-text">
-              Nenhum pedido em aberto.
+            <p>
+              Este gráfico será preenchido quando o sistema
+              possuir os registros de recebimentos, compras
+              e despesas.
             </p>
 
-          ) : (
+          </div>
 
-            <div className="debts-grid">
+        </article>
 
-              {debts.map((debt) => (
+        <article className="dashboard-panel card">
 
-                <article
-                  key={debt.id}
-                  className="debt-card card"
-                  onClick={() => navigate(`/debt/${debt.id}`)}
-                >
+          <div className="dashboard-panel-header">
 
-                  <div className="debt-card-header">
-
-                    <h3 className="debt-card-name">
-                      {debt.debtorName}
-                    </h3>
-
-                    <span
-                      className={`delivery-status ${
-                        debt.delivered
-                          ? 'delivered'
-                          : 'pending'
-                      }`}
-                    >
-                      {debt.delivered
-                        ? 'Entregue'
-                        : 'Aguardando entrega'}
-                    </span>
-
-                  </div>
-
-                  <div className="debt-card-notes">
-
-                    {debt.notes ? (
-                      <p>{debt.notes}</p>
-                    ) : (
-                      <span className="no-notes">
-                        Sem observações
-                      </span>
-                    )}
-
-                  </div>
-
-                  <div className="debt-card-footer">
-
-                    <div className="debt-card-value">
-
-                      <strong>
-                        {debt.isPaid
-                          ? 'Pago!'
-                          : `R$ ${Number(debt.totalOpen).toFixed(2)}`
-                        }
-                      </strong>
-
-                    </div>
-
-                    <div className="debt-actions">
-
-                      {!debt.delivered && (
-
-                        <button
-                          type="button"
-                          className="icon-button"
-                          onClick={(e) => {
-
-                            e.stopPropagation();
-
-                            markAsDelivered(debt.id);
-
-                          }}
-                          title="Marcar como entregue"
-                          aria-label="Marcar como entregue"
-                        >
-                          <FaBoxOpen />
-                        </button>
-
-                      )}
-
-                      {!debt.isPaid && (
-
-                        <button
-                          type="button"
-                          className="icon-button"
-                          onClick={(e) => {
-
-                            e.stopPropagation();
-
-                            openPaymentModal(debt);
-
-                          }}
-                          title="Registrar pagamento"
-                          aria-label="Registrar pagamento"
-                        >
-                          <FaMoneyBillWave />
-                        </button>
-
-                      )}
-
-                    </div>
-
-                  </div>
-
-                </article>
-
-              ))}
-
+            <div>
+              <h3>Distribuição financeira</h3>
+              <p>Composição das movimentações</p>
             </div>
 
-          )}
+            <FaChartPie />
 
-        </section>
+          </div>
 
-      )}
+          <div className="chart-empty-state">
 
-      {activeTab === 'closed' && (
+            <div className="chart-empty-icon">
+              <FaChartPie />
+            </div>
 
-        <section className="debts-section">
+            <strong>Aguardando dados</strong>
 
-          <h2 className="section-title">
-            Fechados
-          </h2>
-
-          {closedDebts.length === 0 ? (
-
-            <p className="empty-text">
-              Nenhum pedido fechado.
+            <p>
+              A distribuição será calculada a partir das
+              vendas, compras e despesas cadastradas.
             </p>
 
-          ) : (
+          </div>
 
-            <ul className="list debt-list">
+        </article>
 
-              {closedDebts.map((debt) => (
+      </section>
 
-                <li
-                  key={debt.id}
-                  className="closed-debt-item card"
-                >
+      {/* Resumo operacional */}
+      <section className="dashboard-bottom-grid">
 
-                  <div className="debt-info">
+        <article className="dashboard-panel card">
 
-                    <Link
-                      to={`/debt/${debt.id}`}
-                      className="debt-link"
-                    >
+          <div className="dashboard-panel-header">
 
-                      <div className="closed-debt-name">
-                        {debt.debtorName}
-                      </div>
+            <div>
+              <h3>Resumo de vendas</h3>
+              <p>Situação dos pedidos cadastrados</p>
+            </div>
 
-                    </Link>
+            <FaShoppingBag />
 
-                    {debt.notes && (
+          </div>
 
-                      <div className="closed-debt-note">
-                        {debt.notes}
-                      </div>
+          <div className="sales-summary-list">
 
-                    )}
+            <div className="sales-summary-item">
+              <span>Pedidos em aberto</span>
+              <strong>{debts.length}</strong>
+            </div>
 
-                  </div>
+            <div className="sales-summary-item">
+              <span>Pedidos fechados</span>
+              <strong>{closedDebts.length}</strong>
+            </div>
 
-                </li>
+            <div className="sales-summary-item">
+              <span>Total de pedidos</span>
+              <strong>{totalOrders}</strong>
+            </div>
 
-              ))}
+          </div>
 
-            </ul>
+          <NavLink
+            to="/sales"
+            className="dashboard-panel-link"
+          >
+            Acessar vendas
+            <span>→</span>
+          </NavLink>
 
-          )}
+        </article>
 
-        </section>
+        <article className="dashboard-panel card">
 
-      )}
-      <PaymentModal
-        visible={showPaymentModal}
-        amount={paymentAmount}
-        note={paymentNote}
-        onAmountChange={setPaymentAmount}
-        onNoteChange={setPaymentNote}
-        onCancel={closePaymentModal}
-        onSave={savePayment}
-      />
+          <div className="dashboard-panel-header">
+
+            <div>
+              <h3>Gestão do negócio</h3>
+              <p>Acesse os outros módulos</p>
+            </div>
+
+            <FaWallet />
+
+          </div>
+
+          <div className="management-links">
+
+            <NavLink to="/purchases">
+              <FaReceipt />
+              <span>Registrar compras</span>
+              <span className="management-arrow">→</span>
+            </NavLink>
+
+            <NavLink to="/expenses">
+              <FaMoneyBillWave />
+              <span>Registrar despesas</span>
+              <span className="management-arrow">→</span>
+            </NavLink>
+
+            <NavLink to="/suppliers">
+              <FaTruck />
+              <span>Gerenciar fornecedores</span>
+              <span className="management-arrow">→</span>
+            </NavLink>
+
+          </div>
+
+        </article>
+
+      </section>
+
     </div>
   );
 }
