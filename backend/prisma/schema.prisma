@@ -27,6 +27,7 @@ model Purchase {
   userId      Int
   user        User              @relation(fields: [userId], references: [id])
   payments    PurchasePayment[]
+  notes       String?           @db.VarChar(500)
 }
 
 model PurchasePayment {

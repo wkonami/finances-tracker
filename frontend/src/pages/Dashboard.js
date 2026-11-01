@@ -323,12 +323,6 @@ export default function Dashboard() {
               <span className="management-arrow">→</span>
             </NavLink>
 
-            <NavLink to="/expenses">
-              <FaMoneyBillWave />
-              <span>Registrar despesas</span>
-              <span className="management-arrow">→</span>
-            </NavLink>
-
             <NavLink to="/suppliers">
               <FaTruck />
               <span>Gerenciar fornecedores</span>

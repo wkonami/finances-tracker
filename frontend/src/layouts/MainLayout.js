@@ -37,22 +37,16 @@ const navigationItems = [
     description: 'Gerencie seus pedidos, vendas e recebimentos.'
   },
   {
-    label: 'Fornecedores',
-    path: '/suppliers',
-    icon: <FaTruck />,
-    description: 'Gerencie seus fornecedores.'
-  },
-  {
     label: 'Compras',
     path: '/purchases',
     icon: <FaReceipt />,
     description: 'Controle suas compras e aquisições.'
   },
   {
-    label: 'Despesas',
-    path: '/expenses',
-    icon: <FaWallet />,
-    description: 'Acompanhe os custos e despesas do negócio.'
+    label: 'Fornecedores',
+    path: '/suppliers',
+    icon: <FaTruck />,
+    description: 'Gerencie seus fornecedores.'
   },
   {
     label: 'Relatórios',

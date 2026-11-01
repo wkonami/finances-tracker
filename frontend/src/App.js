@@ -21,6 +21,7 @@ import DebtDetails from './pages/DebtDetails';
 import Users from './pages/Users';
 import Register from './pages/Register';
 import Sales from './pages/Sales';
+import Purchases from './pages/Purchases';
 
 import MainLayout from './layouts/MainLayout';
 
@@ -130,6 +131,11 @@ export default function App() {
             <Route 
               path="/sales" 
               element={<Sales />} 
+            />
+
+            <Route 
+              path="/purchases" 
+              element={<Purchases />} 
             />
 
             <Route

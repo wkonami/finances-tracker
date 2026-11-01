@@ -92,10 +92,31 @@ async function createPurchase(req, res) {
       });
     }
 
+    const { description, totalAmount, notes } = req.body;
+
+    if (
+    notes !== undefined &&
+    notes !== null &&
+    typeof notes !== 'string'
+    ) {
+    return res.status(400).json({
+        message: 'Observação inválida'
+    });
+    }
+
+    const normalizedNotes = notes?.trim() || null;
+
+    if (normalizedNotes && normalizedNotes.length > 500) {
+    return res.status(400).json({
+        message: 'A observação deve possuir no máximo 500 caracteres'
+    });
+    }
+
     const purchase = await prisma.purchase.create({
       data: {
         description: descriptionValidation.value,
         totalAmount: amountValidation.amount,
+        notes: normalizedNotes,
         userId: req.user.id
       },
       include: {
@@ -219,6 +240,27 @@ async function updatePurchase(req, res) {
 
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    if (req.body.notes !== undefined) {
+        if (
+            req.body.notes !== null &&
+            typeof req.body.notes !== 'string'
+        ) {
+            return res.status(400).json({
+            message: 'Observação inválida'
+            });
+        }
+
+        const notes = req.body.notes?.trim() || null;
+
+        if (notes && notes.length > 500) {
+            return res.status(400).json({
+            message: 'A observação deve possuir no máximo 500 caracteres'
+            });
+        }
+
+        data.notes = notes;
     }
 
     const purchase = await prisma.purchase.findFirst({
