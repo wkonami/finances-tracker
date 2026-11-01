@@ -18,7 +18,6 @@ import {
   FaBars,
   FaSignOutAlt,
   FaWallet,
-  FaMoneyBillWave
 } from 'react-icons/fa';
 
 import ThemeToggle from '../components/ThemeToggle';
