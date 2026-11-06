@@ -148,7 +148,9 @@
 .table-wrapper{
     width:100%;
     overflow-x:auto;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
+
 
 /* ==========================================================
    RESPONSIVE

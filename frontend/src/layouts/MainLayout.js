@@ -52,6 +52,12 @@ const navigationItems = [
     path: '/reports',
     icon: <FaFileAlt />,
     description: 'Consulte relatórios e indicadores financeiros.'
+  },
+  {
+    label: 'Usuários',
+    path: '/users',
+    icon: <FaUsers />,
+    description: 'Gestão de usuários.'
   }
 ];
 

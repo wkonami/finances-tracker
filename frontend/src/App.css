@@ -266,6 +266,12 @@
     padding-bottom: 2rem;
 }
 
+.users-form-card {
+  border: 3px var(--color-border) solid;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
 .users-header {
     display: flex;
     flex-wrap: wrap;
@@ -326,10 +332,6 @@
 
 .users-form-actions .button {
     flex: 0 1 auto;
-}
-
-.users-table {
-    min-width: 700px;
 }
 
 .users-table .users-actions-column {

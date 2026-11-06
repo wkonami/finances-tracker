@@ -4,6 +4,11 @@ import React, {
   useCallback
 } from 'react';
 
+import {
+  FaPen,
+  FaTrash,
+} from 'react-icons/fa';
+
 import api from '../services/api';
 
 import { useNavigate } from 'react-router-dom';
@@ -145,25 +150,6 @@ export default function Users() {
 
   return (
     <main className="container users-page">
-      <header className="users-header">
-        <div>
-          <h1 className="title">
-            Manutenção de Usuários
-          </h1>
-
-          <p className="empty-text">
-            Gerencie os acessos e os perfis dos usuários do sistema.
-          </p>
-        </div>
-
-        <button
-          className="button secondary"
-          type="button"
-          onClick={() => navigate('/dashboard')}
-        >
-          Voltar ao dashboard
-        </button>
-      </header>
 
       <section className="page-card users-form-card mb-3">
         <div className="users-section-header">
@@ -285,7 +271,7 @@ export default function Users() {
         ) : (
           <div className="table-wrapper">
             <table className="table users-table">
-              <thead>
+              <thead className="users-table-header">
                 <tr>
                   <th>Usuário</th>
                   <th>Perfil</th>
@@ -325,7 +311,7 @@ export default function Users() {
                           type="button"
                           onClick={() => editUser(user)}
                         >
-                          Editar
+                          <FaPen/>
                         </button>
 
                         <button
@@ -333,7 +319,7 @@ export default function Users() {
                           type="button"
                           onClick={() => deleteUser(user.id)}
                         >
-                          Arquivar
+                          <FaTrash/>
                         </button>
                       </div>
                     </td>
