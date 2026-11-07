@@ -1,704 +1,651 @@
 /* ==========================================================
-   CARD
+   COMPONENTS — elementos reutilizáveis
+   Responsabilidade: aparência de cards, botões, badges,
+   tabelas, listas, formulários, modais e estados.
 ========================================================== */
 
-.card{
-    background:var(--color-surface);
-    border:1px solid var(--color-border);
-    border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-md);
-    transition:
-        transform var(--transition),
-        box-shadow var(--transition),
-        border-color var(--transition);
+/* Cards */
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition),
+                box-shadow var(--transition),
+                border-color var(--transition);
 }
 
-.card.interactive:hover{
-    transform:translateY(-3px);
-    box-shadow:var(--shadow-lg);
-    border-color:color-mix(in srgb,var(--color-primary) 20%,var(--color-border));
+.card.interactive:hover,
+.record-card:hover,
+.debt-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-.delivery-status {
+/* Botões */
+.button {
     display: inline-flex;
     align-items: center;
-    gap: .3rem;
-    margin-top: .35rem;
-    font-size: .82rem;
+    justify-content: center;
+    gap: .5rem;
+    min-width: 46px;
+    min-height: 46px;
+    padding: .75rem 1.25rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--color-primary);
+    color: #fff;
+    font-size: .95rem;
     font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition),
+                color var(--transition),
+                transform var(--transition),
+                box-shadow var(--transition),
+                opacity var(--transition);
 }
 
-.delivery-status.delivered {
-    color: #22c55e;
+.button:hover {
+    background: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
-.delivery-status.pending {
-    color: #f59e0b;
+.button:active { transform: none; }
+
+.button:focus-visible,
+.icon-button:focus-visible,
+.theme-toggle:focus-visible,
+.quick-item-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px var(--color-primary-light);
 }
 
-/* ==========================================================
-   BUTTONS
-========================================================== */
-
-.button{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:.5rem;
-
-    min-height:46px;
-    min-width:46px;
-
-    padding:.75rem 1.25rem;
-
-    border:none;
-    border-radius:var(--radius-md);
-
-    background:var(--color-primary);
-    color:#fff;
-
-    font-size:.95rem;
-    font-weight:600;
-
-    cursor:pointer;
-    user-select:none;
-    
-
-    transition:
-        background var(--transition),
-        transform var(--transition),
-        box-shadow var(--transition),
-        opacity var(--transition);
+.button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
-.button:hover{
-    background:var(--color-primary-hover);
-    transform:translateY(-1px);
-    box-shadow:var(--shadow-sm);
+.button.secondary {
+    background: transparent;
+    color: var(--color-text);
+    border-color: var(--color-border);
 }
 
-.button:active{
-    transform:none;
+.button.secondary:hover {
+    background: var(--color-surface-hover);
 }
 
-.button:focus-visible{
-    outline:none;
-    box-shadow:
-        0 0 0 4px var(--color-primary-light);
+.button.danger { background: var(--color-danger); }
+.button.danger:hover { background: #a93226; }
+
+.button.small {
+    min-height: 38px;
+    padding: .55rem .9rem;
+    font-size: .85rem;
 }
 
-.button:disabled{
-    opacity:.6;
-    cursor:not-allowed;
-    transform:none;
-    box-shadow:none;
+/* Botões somente com ícone e controles compactos */
+.icon-button,
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition),
+                color var(--transition),
+                border-color var(--transition),
+                transform var(--transition),
+                box-shadow var(--transition);
 }
 
-.button.secondary{
-    background:transparent;
-    color:var(--color-text);
-    border:1px solid var(--color-border);
+.theme-toggle {
+    flex-basis: 42px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    font-size: 1rem;
 }
 
-.button.secondary:hover{
-    background:var(--color-surface-hover);
+.icon-button:hover,
+.theme-toggle:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
-.button.danger{
-    background:var(--color-danger);
+.icon-button:active,
+.theme-toggle:active { transform: scale(.95); }
+
+/* Badges e estados */
+.badge,
+.status-badge,
+.delivery-status,
+.purchase-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    width: fit-content;
+    padding: .4rem .75rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
-.button.danger:hover{
-    background:#a93226;
+.badge.success,
+.status-badge.success,
+.delivery-status.delivered,
+.purchase-status.paid {
+    background: var(--color-success-light);
+    color: var(--color-success);
 }
 
-.button.small{
-    min-height:38px;
-    padding:.55rem .9rem;
-    font-size:.85rem;
+.badge.danger,
+.status-badge.danger,
+.delivery-status.pending,
+.purchase-status.pending {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
 }
 
-.button:disabled{
-    opacity:.65;
-    cursor:not-allowed;
-    transform:none;
-    box-shadow:none;
+/* Divisores e tabelas */
+.divider {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 1px solid var(--color-border);
 }
 
-.icon-button {
-  width: 38px;
-  height: 38px;
-
-  min-width: 38px;
-  min-height: 38px;
-
-  flex: 0 0 38px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-
-  background: var(--color-surface);
-  color: var(--color-text);
-
-  font-size: .95rem;
-
-  cursor: pointer;
-  user-select: none;
-
-  transition:
-    background var(--transition),
-    color var(--transition),
-    border-color var(--transition),
-    transform var(--transition),
-    box-shadow var(--transition);
-}
-
-.icon-button:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary);
-
-  transform: translateY(-1px);
-
-  box-shadow: var(--shadow-sm);
-}
-
-.icon-button:active {
-  transform: scale(.95);
-}
-
-.icon-button:focus-visible {
-  outline: none;
-
-  box-shadow:
-    0 0 0 4px var(--color-primary-light);
-}
-/* ==========================================================
-   BADGES
-========================================================== */
-
-.badge{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-
-    min-height:32px;
-    min-width:32px;
-
-    padding:.45rem .9rem;
-
-    border-radius:999px;
-
-    font-size:.85rem;
-    font-weight:700;
-
-    white-space:nowrap;
-}
-
-.badge.success{
-    background:var(--color-success-light);
-    color:var(--color-success);
-}
-
-.badge.danger{
-    background:var(--color-danger-light);
-    color:var(--color-danger);
-}
-
-/* ==========================================================
-   DIVIDER
-========================================================== */
-
-.divider{
-    border:none;
-    border-top:1px solid var(--color-border);
-    margin:2rem 0;
-}
-
-/* ==========================================================
-   TABLE
-========================================================== */
-
-.table{
-    width:100%;
-    border-collapse:collapse;
+.table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
 .table th,
-.table td{
-    padding:.9rem;
+.table td { padding: .9rem; }
+
+.table th {
+    background: var(--color-primary);
+    color: #fff;
+    text-align: left;
+    font-weight: 600;
 }
 
-.table th{
-    background:var(--color-primary);
-    color:#fff;
-    text-align:left;
-    font-weight:600;
-}
-
-.table td{
-    border-bottom:1px solid var(--color-border);
-}
-
-.table tbody tr{
-    transition:background var(--transition);
-}
-
-.table tbody tr:hover{
-    background:var(--color-surface-hover);
-}
-
-/* ==========================================================
-   QUICK ITEMS
-========================================================== */
-
-.quick-items{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-    gap:.5rem;
-}
-
-.quick-item-button {
-  width: 100%;
-  min-height: 42px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-
-  padding: .55rem .8rem;
-
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-
-  background: var(--color-surface);
-  color: var(--color-text);
-
-  font-size: .9rem;
-  font-weight: 600;
-
-  cursor: pointer;
-  user-select: none;
-
-  transition:
-    background var(--transition),
-    color var(--transition),
-    border-color var(--transition),
-    transform var(--transition),
-    box-shadow var(--transition);
-}
-
-.quick-item-button:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary);
-
-  transform: translateY(-1px);
-
-  box-shadow: var(--shadow-sm);
-}
-
-.quick-item-button:active {
-  transform: scale(.98);
-}
-
-.quick-item-button:focus-visible {
-  outline: none;
-
-  box-shadow:
-    0 0 0 4px var(--color-primary-light);
-}
-
-/* ==========================================================
-   LISTS
-========================================================== */
-
-.list{
-    list-style:none;
-    display:flex;
-    flex-direction:column;
-    gap:1rem;
-}
-
-/* ==========================================================
-   PAYMENT CARD
-========================================================== */
-
-.payment-item{
-    padding:1.2rem;
-    border-left:4px solid var(--color-primary);
-}
-
-.payment-info{
-    display:flex;
-    flex-direction:column;
-    gap:.5rem;
-}
-
-.payment-actions{
-    display:flex;
-    flex-wrap:wrap;
-    gap:.75rem;
-}
-
-.payment-actions .button{
-    flex:1 1 180px;
-}
-
-.payment-note-text {
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-  margin-top: .25rem;
-}
-
-.modal-overlay{
-
-    position:fixed;
-
-    inset:0;
-
-    background:rgba(0,0,0,.45);
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    z-index:1000;
-
-}
-
-.payment-modal{
-
-    width:100%;
-
-    max-width:420px;
-
-    background:var(--color-surface);
-
-    padding:1.5rem;
-
-    border-radius:16px;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:1rem;
-
-    box-shadow:0 10px 30px rgba(0,0,0,.25);
-
-}
-
-.payment-modal input,
-
-.payment-modal textarea{
-
-    width:100%;
-
-}
-
-.modal-buttons{
-
-    display:flex;
-
-    justify-content:flex-end;
-
-    gap:.8rem;
-
-}
-
-/* ==========================================================
-   LOADING
-========================================================== */
-
-.loading{
-    display:grid;
-    place-items:center;
-    min-height:100vh;
-}
-
-.loading-box{
-    padding:2rem;
-    text-align:center;
-}
-
-/* ==========================================================
-   DEBT CARDS
-========================================================== */
-
-.debts-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(auto-fit, minmax(280px, 1fr));
-
-  gap: 1rem;
-
-  width: 100%;
-}
-
-
-/* CARD */
-
-.debt-card {
-  display: flex;
-  flex-direction: column;
-
-  min-width: 0;
-  min-height: 190px;
-
-  padding: 1.1rem;
-
-  cursor: pointer;
-
-  overflow: hidden;
-
-  transition:
-    transform var(--transition),
-    box-shadow var(--transition);
-}
-
-.debt-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-
-/* CABEÇALHO */
-
-.debt-card-header {
-  display: flex;
-
-  align-items: flex-start;
-  justify-content: space-between;
-
-  gap: 0.75rem;
-
-  margin-bottom: 1rem;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  flex-direction: row-reverse;
-  gap: .75rem;
-
-  flex-shrink: 0;
-}
-
-.debt-card-name {
-  margin: 0;
-
-  font-size: 1.05rem;
-  font-weight: 600;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-
-/* OBSERVAÇÕES */
-
-.debt-card-notes {
-  flex: 1;
-
-  min-width: 0;
-  max-height: 4.05em;
-
-  color: var(--color-text-secondary);
-
-  font-size: 0.9rem;
-  line-height: 1.35;
-
-  overflow: hidden;
-  overflow-wrap: anywhere;
-
-  white-space: pre-line;
-
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-}
-
-.debt-card-notes p {
-  margin: 0;
-
-  overflow: hidden;
-}
-
-.no-notes {
-  opacity: 0.6;
-  font-style: italic;
-}
-
-
-/* RODAPÉ */
-
-.debt-card-footer {
-  display: flex;
-
-  align-items: flex-end;
-  justify-content: space-between;
-
-  gap: 1rem;
-
-  margin-top: auto;
-}
-
-
-/* VALOR */
-
-.debt-card-value {
-  display: flex;
-  flex-direction: column;
-
-  gap: 0.2rem;
-}
-
-.debt-card-value span {
-  color: var(--color-text-secondary);
-
-  font-size: 0.75rem;
-}
-
-.debt-card-value strong {
-  font-size: 1.15rem;
-}
-
-
-/* BOTÕES */
-
-.debt-actions {
-  display: flex;
-
-  align-items: center;
-
-  gap: 0.4rem;
-
-  flex-shrink: 0;
-}
-
-/* ==========================================================
-   EDIT DEBT MODAL
-========================================================== */
-
-.edit-debt-modal {
-    width: min(100% - 2rem, 520px);
-
-    padding: 1.5rem;
-
+.table td { border-bottom: 1px solid var(--color-border); }
+.table tbody tr { transition: background var(--transition); }
+.table tbody tr:hover { background: var(--color-surface-hover); }
+
+/* Listas */
+.list,
+.record-list,
+.payment-list,
+.history-list,
+.purchase-history-list,
+.debt-list {
     display: flex;
     flex-direction: column;
-
     gap: 1rem;
-
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.edit-debt-modal h3 {
+    list-style: none;
+    padding: 0;
     margin: 0;
-    font-size: 1.25rem;
 }
 
-.edit-debt-modal .form-group {
+/* Resumos e valores */
+.summary-card,
+.summary-item {
+    min-width: 0;
+    padding: 1.2rem;
+}
+
+.summary-label {
+    display: block;
+    margin-bottom: .4rem;
+    color: var(--color-text-secondary);
+    font-size: .85rem;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.summary-value.success { color: var(--color-success); }
+.summary-value.danger { color: var(--color-danger); }
+
+.value-item {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    min-width: 0;
+}
+
+.value-item span {
+    color: var(--color-text-secondary);
+    font-size: .8rem;
+}
+
+.value-item strong {
+    overflow-wrap: anywhere;
+    color: var(--color-text);
+    font-size: .95rem;
+}
+
+.value-item.remaining strong,
+.value-item.danger strong { color: var(--color-danger); }
+
+/* Formulários */
+.form,
+.login-form,
+.new-debt-form,
+.payment-form,
+.payment-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
     display: flex;
     flex-direction: column;
     gap: .4rem;
 }
 
-.edit-debt-modal label {
+.field {
+    width: 100%;
+    min-width: 0;
+}
+
+textarea.field,
+textarea {
+    resize: vertical;
+}
+
+.quick-items,
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.quick-item-button,
+.quick-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 42px;
+    padding: .55rem .8rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
     font-size: .9rem;
     font-weight: 600;
-    color: var(--color-text);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition),
+                color var(--transition),
+                border-color var(--transition),
+                transform var(--transition),
+                box-shadow var(--transition);
 }
 
-.edit-debt-modal textarea {
-    resize: vertical;
-    min-height: 120px;
+.quick-item-button:hover,
+.quick-action:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
+/* Modais */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+    background: rgb(0 0 0 / 45%);
+}
+
+.modal,
+.payment-modal,
+.edit-debt-modal {
+    width: min(100%, 520px);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-wide,
+.modal-history {
+    width: min(100%, 580px);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h2,
+.modal-header h3 { margin: 0; }
+
+.modal-header p {
+    margin: .4rem 0 0;
+    color: var(--color-text-secondary);
+    font-size: .85rem;
+}
+
+.modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal-actions,
+.modal-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: 1rem;
+}
+
+.modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--color-background);
+}
+
+.modal-info span { color: var(--color-text-secondary); font-size: .85rem; }
+.modal-info strong { color: var(--color-success); font-size: 1.4rem; }
+
+/* Pagamentos e histórico */
+.payment-item {
+    padding: 1.2rem;
+    border-left: 4px solid var(--color-primary);
+}
+
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.payment-actions,
+.record-actions,
+.history-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.payment-actions .button { flex: 1 1 180px; }
+
+.payment-note-text,
+.record-note,
+.details-notes {
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+    color: var(--color-text-secondary);
+}
+
+.payment-note-text { margin-top: .25rem; }
+
+.history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.history-item p { margin: .25rem 0 0; }
+
+/* Cards de registros — vendas, compras e demais listagens */
+.record-card {
+    min-width: 0;
+    padding: 1.2rem;
+}
+
+.record-header,
+.record-footer {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.record-header { margin-bottom: 1rem; }
+.record-footer { align-items: flex-end; margin-top: 1rem; }
+
+.record-title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.record-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: .35rem;
+    color: var(--color-text-secondary);
+    font-size: .8rem;
+}
+
+.record-values {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .75rem;
+    margin-block: 1rem;
+}
+
+.record-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.progress {
+    width: 100%;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--color-background);
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-success);
+    transition: width .3s ease;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-top: .5rem;
+    color: var(--color-text-secondary);
+    font-size: .75rem;
+}
+
+/* Estados vazios, erro e carregamento */
+.empty-state,
+.purchases-empty,
+.chart-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    min-height: 220px;
+    padding: 1.5rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+.empty-state h3,
+.empty-state p,
+.purchases-empty h3,
+.purchases-empty p { margin: 0; }
+
+.empty-state h3,
+.purchases-empty h3 { color: var(--color-text); }
+
+.error-message,
+.purchases-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-md);
+    color: var(--color-danger);
+    background: var(--color-danger-light);
+}
+
+.loading-box {
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Cartões antigos de dívidas — mantidos até a migração do JSX */
+.debts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.debt-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 190px;
+    padding: 1.1rem;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.debt-card-header,
+.debt-card-footer {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.debt-card-header { margin-bottom: 1rem; }
+.debt-card-footer { align-items: flex-end; margin-top: auto; }
+
+.debt-card-name {
+    margin: 0;
+    overflow: hidden;
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.debt-card-notes {
+    flex: 1;
+    min-width: 0;
+    max-height: 4.05em;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    color: var(--color-text-secondary);
+    font-size: .9rem;
+    line-height: 1.35;
+    white-space: pre-line;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+}
+
+.debt-card-notes p { margin: 0; }
+.no-notes { opacity: .6; font-style: italic; }
+
+.debt-card-value {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.debt-card-value span {
+    color: var(--color-text-secondary);
+    font-size: .75rem;
+}
+
+.debt-card-value strong { font-size: 1.15rem; }
+
+.debt-actions,
+.header-actions,
 .details-header-actions {
     display: flex;
     align-items: center;
-    gap: .75rem;
     flex-wrap: wrap;
+    gap: .5rem;
 }
 
-.details-notes {
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
-
-/* ==========================================================
-   THEME TOGGLE
-========================================================== */
-
-.theme-toggle {
-  width: 42px;
-  height: 42px;
-
-  min-width: 42px;
-  max-width: 42px;
-
-  min-height: 42px;
-  max-height: 42px;
-
-  flex: 0 0 42px;
-
-  box-sizing: border-box;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-  margin: 0;
-
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-
-  background: var(--color-surface);
-  color: var(--color-text);
-
-  font-size: 1rem;
-
-  cursor: pointer;
-  user-select: none;
-
-  transition:
-    background var(--transition),
-    color var(--transition),
-    border-color var(--transition),
-    transform var(--transition),
-    box-shadow var(--transition);
-}
-
-.theme-toggle:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-primary);
-
-  transform: translateY(-1px);
-
-  box-shadow: var(--shadow-sm);
-}
-
-.theme-toggle:active {
-  transform: scale(.95);
-}
-
-.theme-toggle:focus-visible {
-  outline: none;
-
-  box-shadow:
-    0 0 0 4px var(--color-primary-light);
+/* Ajustes responsivos dos componentes */
+@media (max-width: 600px) {
+    .record-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .record-header,
+    .record-footer,
+    .history-item { align-items: flex-start; flex-direction: column; }
+    .modal-actions,
+    .modal-buttons { flex-direction: column-reverse; }
+    .modal-actions .button,
+    .modal-buttons .button { width: 100%; }
+    .modal,
+    .payment-modal,
+    .edit-debt-modal { padding: 1.1rem; }
 }

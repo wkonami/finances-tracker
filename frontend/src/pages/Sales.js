@@ -174,18 +174,18 @@ export default function Sales() {
   }
 
   return (
-    <div className="page-container sales-page">
-      <div className="sales-toolbar">
+    <div className="page-container page-content">
+      <div className="page-header">
         <div>
-          <h2 className="section-title">Gerenciamento de vendas</h2>
-          <p className="sales-description">
+          <h1 className="page-title">Vendas</h1>
+          <p className="page-description">
             Acompanhe suas vendas, pagamentos e entregas.
           </p>
         </div>
 
         <button
           type="button"
-          className="button"
+          className="button button-primary"
           onClick={() => navigate('/new')}
         >
           <FaPlus />
@@ -199,29 +199,29 @@ export default function Sales() {
         </div>
       )}
 
-      <section className="summary-box">
-        <div className="summary-item card">
+      <section className="summary-grid">
+        <div className="summary-card card">
           <span className="summary-label">Total a receber</span>
           <strong className="summary-value">
             {formatCurrency(totalOpen)}
           </strong>
         </div>
 
-        <div className="summary-item card">
+        <div className="summary-card card">
           <span className="summary-label">Vendas em aberto</span>
           <strong className="summary-value">
             {debts.length}
           </strong>
         </div>
 
-        <div className="summary-item card">
+        <div className="summary-card card">
           <span className="summary-label">Vendas quitadas</span>
           <strong className="summary-value success">
             {closedDebts.length}
           </strong>
         </div>
 
-        <div className="summary-item card">
+        <div className="summary-card card">
           <span className="summary-label">Total de vendas</span>
           <strong className="summary-value">
             {totalOrders}
@@ -229,9 +229,9 @@ export default function Sales() {
         </div>
       </section>
 
-      <section className="sales-status-summary">
-        <div className="sales-status-item">
-          <span className="sales-status-icon pending">
+      <section className="status-summary">
+        <div className="status-item">
+          <span className="status-icon pending">
             <FaBoxOpen />
           </span>
 
@@ -243,8 +243,8 @@ export default function Sales() {
           </div>
         </div>
 
-        <div className="sales-status-item">
-          <span className="sales-status-icon waiting">
+        <div className="status-item">
+          <span className="status-icon waiting">
             <FaClock />
           </span>
 
@@ -257,11 +257,11 @@ export default function Sales() {
         </div>
       </section>
 
-      <section className="debts-section">
-        <div className="sales-tabs">
+      <section className="content-section">
+        <div className="tabs">
           <button
             type="button"
-            className={`sales-tab ${activeTab === 'open' ? 'active' : ''}`}
+            className={`tab ${activeTab === 'open' ? 'active' : ''}`}
             onClick={() => setActiveTab('open')}
           >
             Em aberto
@@ -270,7 +270,7 @@ export default function Sales() {
 
           <button
             type="button"
-            className={`sales-tab ${activeTab === 'closed' ? 'active' : ''}`}
+            className={`tab ${activeTab === 'closed' ? 'active' : ''}`}
             onClick={() => setActiveTab('closed')}
           >
             Quitadas
@@ -279,13 +279,13 @@ export default function Sales() {
         </div>
 
         {visibleDebts.length === 0 ? (
-          <p className="empty-text">
+          <p className="empty-state">
             {activeTab === 'open'
               ? 'Nenhuma venda em aberto.'
               : 'Nenhuma venda quitada.'}
           </p>
         ) : (
-          <div className="debt-list">
+          <div className="record-list">
             {visibleDebts.map((debt) => {
               const remainingAmount = getRemainingAmount(debt);
               const isClosed = activeTab === 'closed';
@@ -293,16 +293,16 @@ export default function Sales() {
               return (
                 <article
                   key={debt.id}
-                  className={`debt-item card ${isClosed ? 'closed-debt-item' : ''}`}
+                  className="record-card card"
                 >
-                  <div className="debt-info">
-                    <div className="sales-card-heading">
-                      <h3 className={isClosed ? 'closed-debt-name' : ''}>
+                  <div className="record-content">
+                    <div className="record-header">
+                      <h3 className="record-title">
                         {debt.debtorName}
                       </h3>
 
                       <span
-                        className={`delivery-status ${
+                        className={`status-badge ${
                           debt.delivered ? 'delivered' : 'pending'
                         }`}
                       >
@@ -319,13 +319,13 @@ export default function Sales() {
                     </div>
 
                     {debt.notes && (
-                      <p className={isClosed ? 'closed-debt-note' : 'debt-note'}>
+                      <p className="record-note">
                         {debt.notes}
                       </p>
                     )}
 
-                    <div className="sales-card-footer">
-                      <div className="debt-value">
+                    <div className="record-footer">
+                      <div className="value-item">
                         <span className="summary-label">
                           {isClosed ? 'Situação' : 'Valor restante'}
                         </span>
@@ -337,7 +337,7 @@ export default function Sales() {
                         </strong>
                       </div>
 
-                      <div className="debt-actions">
+                      <div className="record-actions">
                         <button
                           type="button"
                           className="icon-button"
@@ -393,7 +393,7 @@ export default function Sales() {
       />
 
       {savingPayment && (
-        <div className="sales-saving-indicator">
+        <div className="saving-indicator">
           Salvando pagamento...
         </div>
       )}

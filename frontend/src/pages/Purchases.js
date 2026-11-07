@@ -411,11 +411,13 @@ export default function Purchases() {
   };
 
   return (
-    <div className="purchases-page">
-      <div className="purchases-header">
+    <div className="page-container page-content">
+      <div className="page-header">
         <div>
-          <h1>Compras</h1>
-          <p>Gerencie suas compras e pagamentos.</p>
+          <h1 className="page-title">Compras</h1>
+          <p className="page-description">
+            Gerencie suas compras e pagamentos.
+          </p>
         </div>
 
         <button
@@ -428,7 +430,7 @@ export default function Purchases() {
       </div>
 
       {error && (
-        <div className="purchases-error">
+        <div className="error-message">
           {error}
           <button
             type="button"
@@ -440,56 +442,56 @@ export default function Purchases() {
         </div>
       )}
 
-      <section className="purchases-summary">
-        <div className="purchase-summary-card">
-          <div className="purchase-summary-icon">
+      <section className="summary-grid">
+        <div className="summary-card card">
+          <div className="summary-card-icon">
             <FaShoppingCart />
           </div>
 
-          <span>Total em compras</span>
-          <strong>{formatCurrency(summary.totalAmount)}</strong>
-          <small>{summary.totalCount} compras cadastradas</small>
+          <span className="summary-label">Total em compras</span>
+          <strong className="summary-value">{formatCurrency(summary.totalAmount)}</strong>
+          <small className="summary-meta">{summary.totalCount} compras cadastradas</small>
         </div>
 
-        <div className="purchase-summary-card">
-          <div className="purchase-summary-icon">
+        <div className="summary-card card">
+          <div className="summary-card-icon">
             <FaWallet />
           </div>
 
-          <span>Em aberto</span>
-          <strong>{formatCurrency(summary.totalOpen)}</strong>
-          <small>{summary.openCount} compras pendentes</small>
+          <span className="summary-label">Em aberto</span>
+          <strong className="summary-value">{formatCurrency(summary.totalOpen)}</strong>
+          <small className="summary-meta">{summary.openCount} compras pendentes</small>
         </div>
 
-        <div className="purchase-summary-card">
-          <div className="purchase-summary-icon">
+        <div className="summary-card card">
+          <div className="summary-card-icon">
             <FaMoneyBillWave />
           </div>
 
-          <span>Total pago</span>
-          <strong>{formatCurrency(summary.totalPaid)}</strong>
-          <small>Pagamentos registrados</small>
+          <span className="summary-label">Total pago</span>
+          <strong className="summary-value success">{formatCurrency(summary.totalPaid)}</strong>
+          <small className="summary-meta">Pagamentos registrados</small>
         </div>
 
-        <div className="purchase-summary-card">
-          <div className="purchase-summary-icon">
+        <div className="summary-card card">
+          <div className="summary-card-icon">
             <FaCheckCircle />
           </div>
 
-          <span>Quitadas</span>
-          <strong>{summary.paidCount}</strong>
-          <small>Compras totalmente pagas</small>
+          <span className="summary-label">Quitadas</span>
+          <strong className="summary-value success">{summary.paidCount}</strong>
+          <small className="summary-meta">Compras totalmente pagas</small>
         </div>
       </section>
 
-      <section className="purchases-content">
-        <div className="purchases-toolbar">
+      <section className="content-section">
+        <div className="section-header">
           <div>
             <h2>Histórico de compras</h2>
             <p>Consulte e gerencie seus registros.</p>
           </div>
 
-          <div className="purchases-tabs">
+          <div className="tabs">
             <button
               className={activeTab === 'open' ? 'active' : ''}
               onClick={() => setActiveTab('open')}
@@ -511,7 +513,7 @@ export default function Purchases() {
             Carregando compras...
           </div>
         ) : visiblePurchases.length === 0 ? (
-          <div className="purchases-empty">
+          <div className="empty-state">
             <FaShoppingCart />
 
             <h3>
@@ -537,22 +539,22 @@ export default function Purchases() {
             )}
           </div>
         ) : (
-          <div className="purchases-grid">
+          <div className="record-list">
             {visiblePurchases.map((purchase) => (
               <article
-                className="purchase-card"
+                className="record-card card"
                 key={purchase.id}
               >
-                <div className="purchase-card-header">
-                  <div className="purchase-card-title">
-                    <div className="purchase-card-icon">
+                <div className="record-header">
+                  <div className="record-title-group">
+                    <div className="record-icon">
                       <FaShoppingCart />
                     </div>
 
                     <div>
-                      <h3>{purchase.description}</h3>
+                      <h3 className="record-title">{purchase.description}</h3>
 
-                      <span>
+                      <span className="record-meta">
                         <FaCalendarAlt />
                         {formatDate(purchase.createdAt)}
                       </span>
@@ -560,7 +562,7 @@ export default function Purchases() {
                   </div>
 
                   <span
-                    className={`purchase-status ${
+                    className={`status-badge ${
                       purchase.isPaid ? 'paid' : 'pending'
                     }`}
                   >
@@ -568,22 +570,22 @@ export default function Purchases() {
                   </span>
                 </div>
 
-                <div className="purchase-values">
-                  <div>
+                <div className="record-values">
+                  <div className="value-item">
                     <span>Valor total</span>
                     <strong>
                       {formatCurrency(purchase.totalAmount)}
                     </strong>
                   </div>
 
-                  <div>
+                  <div className="value-item">
                     <span>Valor pago</span>
                     <strong>
                       {formatCurrency(purchase.totalPaid)}
                     </strong>
                   </div>
 
-                  <div className="purchase-remaining">
+                  <div className="value-item">
                     <span>Restante</span>
                     <strong>
                       {formatCurrency(purchase.totalOpen)}
@@ -591,9 +593,9 @@ export default function Purchases() {
                   </div>
                 </div>
 
-                <div className="purchase-progress">
+                <div className="progress">
                   <div
-                    className="purchase-progress-fill"
+                    className="progress-fill"
                     style={{
                       width: `${
                         Math.min(
@@ -606,7 +608,7 @@ export default function Purchases() {
                   />
                 </div>
 
-                <div className="purchase-progress-label">
+                <div className="progress-label">
                   <span>Progresso do pagamento</span>
 
                   <strong>
@@ -618,7 +620,7 @@ export default function Purchases() {
                   </strong>
                 </div>
 
-                <div className="purchase-card-actions">
+                <div className="record-actions">
                   {!purchase.isPaid && (
                     <button
                       className="button button-primary"
@@ -663,10 +665,10 @@ export default function Purchases() {
         {showForm && (
             <div className="modal-overlay">
                 <form
-                className="purchase-modal purchase-form-modal"
+                className="modal modal-wide"
                 onSubmit={handleSavePurchase}
                 >
-                <div className="purchase-modal-header">
+                <div className="modal-header">
                     <div>
                     <h2>
                         {editingPurchase ? 'Editar compra' : 'Nova compra'}
@@ -708,12 +710,12 @@ export default function Purchases() {
                     required
                 />
 
-                <div className="quick-items">
+                <div className="quick-actions">
                     {['Shopee', 'Aliexpress', 'Embalagens'].map((item) => (
                     <button
                         key={item}
                         type="button"
-                        className="quick-item-button"
+                        className="quick-action"
                         onClick={() =>
                         setForm((previous) => ({
                             ...previous,
@@ -738,7 +740,7 @@ export default function Purchases() {
                     onChange={handleFormChange}
                 />
 
-                <div className="purchase-modal-actions">
+                <div className="modal-actions">
                     <button
                     type="button"
                     className="button button-secondary"
@@ -764,8 +766,8 @@ export default function Purchases() {
 
       {paymentPurchase && (
         <div className="modal-overlay">
-          <div className="purchase-modal">
-            <div className="purchase-modal-header">
+          <div className="modal">
+            <div className="modal-header">
               <div>
                 <h2>Registrar pagamento</h2>
                 <p>{paymentPurchase.description}</p>
@@ -781,7 +783,7 @@ export default function Purchases() {
               </button>
             </div>
 
-            <div className="purchase-payment-info">
+            <div className="modal-info">
               <span>Valor restante</span>
               <strong>
                 {formatCurrency(paymentPurchase.totalOpen)}
@@ -841,7 +843,7 @@ export default function Purchases() {
                 />
               </div>
 
-              <div className="purchase-modal-actions">
+              <div className="modal-actions">
                 <button
                   type="button"
                   className="button button-secondary"
@@ -874,8 +876,8 @@ export default function Purchases() {
             }
           }}
         >
-          <div className="purchase-modal purchase-history-modal">
-            <div className="purchase-modal-header">
+          <div className="modal modal-history">
+            <div className="modal-header">
               <div>
                 <h2>Histórico de pagamentos</h2>
                 <p>{historyPurchase.description}</p>
@@ -895,7 +897,7 @@ export default function Purchases() {
                 Carregando histórico...
               </div>
             ) : historyPayments.length === 0 ? (
-              <div className="purchases-empty">
+              <div className="empty-state">
                 <FaHistory />
                 <p>Nenhum pagamento registrado.</p>
               </div>
@@ -951,7 +953,7 @@ export default function Purchases() {
                   />
                 </div>
 
-                <div className="purchase-modal-actions">
+                <div className="modal-actions">
                   <button
                     type="button"
                     className="button button-secondary"
@@ -972,10 +974,10 @@ export default function Purchases() {
                 </div>
               </form>
             ) : (
-              <div className="purchase-history-list">
+              <div className="history-list">
                 {historyPayments.map((payment) => (
                   <div
-                    className="purchase-history-item"
+                    className="history-item"
                     key={payment.id}
                   >
                     <div>
@@ -992,7 +994,7 @@ export default function Purchases() {
                       )}
                     </div>
 
-                    <div className="purchase-history-actions">
+                    <div className="history-actions">
                       <button
                         className="icon-button"
                         title="Editar pagamento"

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import {
   NavLink,
   Outlet,
-  useLocation,
   useNavigate
 } from 'react-router-dom';
 
@@ -52,33 +51,16 @@ const navigationItems = [
     path: '/reports',
     icon: <FaFileAlt />,
     description: 'Consulte relatórios e indicadores financeiros.'
-  },
-  {
-    label: 'Usuários',
-    path: '/users',
-    icon: <FaUsers />,
-    description: 'Gestão de usuários.'
   }
 ];
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const role = localStorage.getItem('role');
   const username = localStorage.getItem('username');
-
-  const currentPage = navigationItems.find((item) => {
-    return location.pathname === item.path ||
-      location.pathname.startsWith(`${item.path}/`);
-  });
-
-  const pageTitle = currentPage?.label || 'Dashboard';
-
-  const pageDescription = currentPage?.description ||
-    'Acompanhe o desempenho financeiro do seu negócio.';
 
   function logout() {
     localStorage.removeItem('token');
@@ -171,6 +153,13 @@ export default function MainLayout() {
           <button
             type="button"
             className="sidebar-logout"
+          >
+            <ThemeToggle />
+          </button>
+
+          <button
+            type="button"
+            className="sidebar-logout"
             onClick={logout}
             title="Sair"
             aria-label="Sair"
@@ -198,20 +187,12 @@ export default function MainLayout() {
               <FaBars />
             </button>
 
-            <div>
-              <span className="dashboard-breadcrumb">
-                Visão geral
-              </span>
-
-              <h1>{pageTitle}</h1>
-
-              <p>{pageDescription}</p>
-            </div>
+            
 
           </div>
 
           <div className="dashboard-header-actions">
-            <ThemeToggle />
+            
           </div>
 
         </header>
