@@ -11,8 +11,6 @@ import {
 
 import api from '../services/api';
 
-import { useNavigate } from 'react-router-dom';
-
 import '../App.css';
 
 export default function Users() {
@@ -23,8 +21,6 @@ export default function Users() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('USER');
-
-  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

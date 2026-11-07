@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  },
+  "scripts": {
+    "start:all": "concurrently --names \"backend,frontend\" --prefix-colors \"blue,green\" \"npm start --prefix backend\" \"npm start --prefix frontend\""
+  }
+}
