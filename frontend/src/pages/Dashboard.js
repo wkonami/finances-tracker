@@ -18,7 +18,8 @@ import {
   FaClock,
   FaChartPie,
   FaTruck,
-  FaWallet
+  FaWallet,
+  FaRedo
 } from 'react-icons/fa';
 
 import api from '../services/api';
@@ -131,25 +132,27 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-content">
+    <div className="page-container page-content">
 
       {/* Indicadores */}
       <section className="dashboard-section">
 
-        <div className="dashboard-section-heading">
+        <div className="page-header">
 
           <div>
-            <h2>Resumo financeiro</h2>
-            <p>Indicadores dos seus pedidos atuais.</p>
+            <h1 page-title>Resumo financeiro</h1>
+            <p className="page-description">
+              Indicadores dos seus pedidos atuais.
+            </p>
           </div>
 
           <button
-            type="button"
+            type="button button-primary"
             className="dashboard-refresh"
             onClick={loadDashboard}
-            title="Atualizar informações"
+            title="Atualizar"
           >
-            Atualizar
+            <FaRedo/>
           </button>
 
         </div>
