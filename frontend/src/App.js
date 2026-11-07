@@ -19,7 +19,6 @@ import Dashboard from './pages/Dashboard';
 import NewDebt from './pages/NewDebt';
 import DebtDetails from './pages/DebtDetails';
 import Users from './pages/Users';
-import Register from './pages/Register';
 import Sales from './pages/Sales';
 import Purchases from './pages/Purchases';
 
@@ -116,11 +115,6 @@ export default function App() {
         <Route
           path="/"
           element={<Login />}
-        />
-
-        <Route
-          path="/register"
-          element={<Register />}
         />
 
         {/* Rotas privadas */}
