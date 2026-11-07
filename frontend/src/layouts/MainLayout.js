@@ -137,37 +137,37 @@ export default function MainLayout() {
           </div>
         )}
 
-        <div className="sidebar-footer">
+                  
+          <div className="sidebar-footer">
 
-          <div className="sidebar-user">
-            <div className="sidebar-avatar">
-              {username?.charAt(0).toUpperCase() || 'U'}
+            <div className="sidebar-user">
+              <div className="sidebar-avatar">
+                {username?.charAt(0).toUpperCase() || 'U'}
+              </div>
+
+              <div className="sidebar-user-info">
+                <strong>{username || 'Usuário'}</strong>
+                <span>{role || 'USER'}</span>
+              </div>
             </div>
 
-            <div className="sidebar-user-info">
-              <strong>{username || 'Usuário'}</strong>
-              <span>{role || 'USER'}</span>
+            <div className="sidebar-actions">
+
+              <ThemeToggle />
+
+              <button
+                type="button"
+                className="sidebar-action"
+                onClick={logout}
+                title="Sair"
+                aria-label="Sair"
+              >
+                <FaSignOutAlt />
+              </button>
+
             </div>
+
           </div>
-
-          <button
-            type="button"
-            className="sidebar-logout"
-          >
-            <ThemeToggle />
-          </button>
-
-          <button
-            type="button"
-            className="sidebar-logout"
-            onClick={logout}
-            title="Sair"
-            aria-label="Sair"
-          >
-            <FaSignOutAlt />
-          </button>
-
-        </div>
 
       </aside>
 

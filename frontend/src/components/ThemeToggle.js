@@ -6,22 +6,15 @@ import {
 } from 'react-icons/fa';
 
 export default function ThemeToggle() {
-
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
 
   useEffect(() => {
-
     const theme = darkMode ? 'dark' : 'light';
 
-    document.documentElement.setAttribute(
-      'data-theme',
-      theme
-    );
-
+    document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-
   }, [darkMode]);
 
   function toggleTheme() {
@@ -31,18 +24,10 @@ export default function ThemeToggle() {
   return (
     <button
       type="button"
-      className="theme-toggle"
+      className="sidebar-action"
       onClick={toggleTheme}
-      title={
-        darkMode
-          ? 'Ativar modo claro'
-          : 'Ativar modo escuro'
-      }
-      aria-label={
-        darkMode
-          ? 'Ativar modo claro'
-          : 'Ativar modo escuro'
-      }
+      title={darkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+      aria-label={darkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
     >
       {darkMode ? <FaSun /> : <FaMoon />}
     </button>

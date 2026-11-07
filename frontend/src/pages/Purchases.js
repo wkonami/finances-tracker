@@ -485,27 +485,21 @@ export default function Purchases() {
       </section>
 
       <section className="content-section">
-        <div className="section-header">
-          <div>
-            <h2>Histórico de compras</h2>
-            <p>Consulte e gerencie seus registros.</p>
-          </div>
+        <div className="tabs">
+          <button
+            type="button"
+            className={`tab ${activeTab === 'open' ? 'active' : ''}`}
+            onClick={() => setActiveTab('open')}
+          >
+            Em aberto ({purchases.length})
+          </button>
 
-          <div className="tabs">
-            <button
-              className={activeTab === 'open' ? 'active' : ''}
-              onClick={() => setActiveTab('open')}
-            >
-              Em aberto ({purchases.length})
-            </button>
-
-            <button
-              className={activeTab === 'paid' ? 'active' : ''}
-              onClick={() => setActiveTab('paid')}
-            >
-              Quitadas ({paidPurchases.length})
-            </button>
-          </div>
+          <button
+            className={`tab ${activeTab === 'paid' ? 'active' : ''}`}
+            onClick={() => setActiveTab('paid')}
+          >
+            Quitadas ({paidPurchases.length})
+          </button>
         </div>
 
         {loading ? (
