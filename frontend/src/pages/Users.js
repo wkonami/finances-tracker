@@ -29,7 +29,6 @@ export default function Users() {
     setLoading(true);
 
     try {
-
       const { data } = await api.get('/users');
 
       setUsers(Array.isArray(data) ? data : []);

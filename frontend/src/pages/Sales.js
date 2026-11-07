@@ -179,7 +179,7 @@ export default function Sales() {
         <div>
           <h1 className="page-title">Vendas</h1>
           <p className="page-description">
-            Acompanhe suas vendas, pagamentos e entregas.
+            Acompanhe suas vendas e entregas.
           </p>
         </div>
 
