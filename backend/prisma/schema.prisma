@@ -57,15 +57,13 @@ model Sale {
   userId      Int
   user        User      @relation(fields: [userId], references: [id])
   payments    Payment[]
-
-  @@map("Debt")
 }
 
 model Payment {
   id          Int      @id @default(autoincrement())
   amount      Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
-  saleId      Int      @map("debtId")
+  saleId      Int      
   paymentDate DateTime
   note        String?
   sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
