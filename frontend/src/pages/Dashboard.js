@@ -10,7 +10,6 @@ import {
 } from 'react-router-dom';
 
 import {
-  FaChartLine,
   FaShoppingBag,
   FaReceipt,
   FaMoneyBillWave,
@@ -26,6 +25,8 @@ import api from '../services/api';
 
 import '../App.css';
 
+import FinancialFlowChart from '../components/FinancialFlowChart';
+
 const formatCurrency = (value) => {
   return Number(value || 0).toLocaleString('pt-BR', {
     style: 'currency',
@@ -40,41 +41,61 @@ export default function Dashboard() {
   const [closedDebts, setClosedDebts] = useState([]);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadDashboard = useCallback(async () => {
+  const [error, setError] = useState('');
+  const [refreshError, setRefreshError] = useState('');
+
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Carrega os dados da Dashboard
+  const loadDashboard = useCallback(async (isRefresh = false) => {
 
     try {
 
-      setLoading(true);
-      setError('');
+      if (isRefresh) {
+        setRefreshing(true);
+        setRefreshError('');
+      } else {
+        setLoading(true);
+        setError('');
+      }
 
       const response = await api.get('/debts');
 
-      setSummary(response.data.summary);
+      setSummary(response.data.summary || null);
       setDebts(response.data.debts || []);
       setClosedDebts(response.data.closedDebts || []);
 
+      setLastUpdated(new Date());
+
     } catch (err) {
 
-      console.error(err);
+      console.error('Erro ao carregar Dashboard:', err);
 
-      setError('Não foi possível carregar os dados financeiros.');
+      if (isRefresh) {
+        setRefreshError('Não foi possível atualizar os dados. Tente novamente.');
+      } else {
+        setError('Não foi possível carregar os dados financeiros.');
+      }
 
     } finally {
 
       setLoading(false);
+      setRefreshing(false);
 
     }
 
   }, []);
 
+  // Carregamento inicial
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
 
   const totalOrders = debts.length + closedDebts.length;
 
+  // Indicadores financeiros
   const indicators = [
     {
       title: 'Total a receber',
@@ -106,27 +127,32 @@ export default function Dashboard() {
     }
   ];
 
+  // Carregamento inicial
   if (loading) {
     return (
       <div className="dashboard-loading">
         <div className="loading-spinner" />
+
         <span>Carregando informações...</span>
       </div>
     );
   }
 
+  // Erro no carregamento inicial
   if (error) {
     return (
       <div className="dashboard-error">
+
         <p>{error}</p>
 
         <button
           type="button"
           className="button"
-          onClick={loadDashboard}
+          onClick={() => loadDashboard()}
         >
           Tentar novamente
         </button>
+
       </div>
     );
   }
@@ -134,29 +160,61 @@ export default function Dashboard() {
   return (
     <div className="page-container page-content">
 
-      {/* Indicadores */}
+      {/* Indicadores financeiros */}
       <section className="dashboard-section">
 
         <div className="page-header">
 
           <div>
-            <h1 page-title>Resumo financeiro</h1>
+            <h1 className="page-title">
+              Resumo financeiro
+            </h1>
+
             <p className="page-description">
               Indicadores dos seus pedidos atuais.
             </p>
           </div>
 
-          <button
-            type="button button-primary"
-            className="dashboard-refresh"
-            onClick={loadDashboard}
-            title="Atualizar"
-          >
-            <FaRedo/>
-          </button>
+          {/* Ações do cabeçalho */}
+          <div className="dashboard-header-actions">
+
+            {lastUpdated && (
+              <span className="dashboard-last-updated">
+                Atualizado às{' '}
+                {lastUpdated.toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            )}
+
+            <button
+              type="button"
+              className={`dashboard-refresh ${refreshing ? 'refreshing' : ''}`}
+              onClick={() => loadDashboard(true)}
+              disabled={refreshing}
+              title="Atualizar informações"
+              aria-label="Atualizar informações da Dashboard"
+              aria-busy={refreshing}
+            >
+              <FaRedo />
+            </button>
+
+          </div>
 
         </div>
 
+        {/* Erro durante atualização */}
+        {refreshError && (
+          <div
+            className="dashboard-refresh-error"
+            role="alert"
+          >
+            {refreshError}
+          </div>
+        )}
+
+        {/* Cards de indicadores */}
         <div className="dashboard-indicators">
 
           {indicators.map((indicator) => (
@@ -194,46 +252,20 @@ export default function Dashboard() {
 
       </section>
 
-      {/* Gráficos */}
+      {/* Gráficos financeiros */}
       <section className="dashboard-charts">
 
-        <article className="dashboard-panel card">
+        {/* Fluxo financeiro */}
+          <FinancialFlowChart />
 
-          <div className="dashboard-panel-header">
-
-            <div>
-              <h3>Fluxo financeiro</h3>
-              <p>Entradas e saídas do negócio</p>
-            </div>
-
-            <FaChartLine />
-
-          </div>
-
-          <div className="chart-empty-state">
-
-            <div className="chart-empty-icon">
-              <FaChartLine />
-            </div>
-
-            <strong>Dados financeiros em preparação</strong>
-
-            <p>
-              Este gráfico será preenchido quando o sistema
-              possuir os registros de recebimentos, compras
-              e despesas.
-            </p>
-
-          </div>
-
-        </article>
-
+        {/* Distribuição financeira */}
         <article className="dashboard-panel card">
 
           <div className="dashboard-panel-header">
 
             <div>
               <h3>Distribuição financeira</h3>
+
               <p>Composição das movimentações</p>
             </div>
 
@@ -247,7 +279,9 @@ export default function Dashboard() {
               <FaChartPie />
             </div>
 
-            <strong>Aguardando dados</strong>
+            <strong>
+              Aguardando dados
+            </strong>
 
             <p>
               A distribuição será calculada a partir das
@@ -263,12 +297,14 @@ export default function Dashboard() {
       {/* Resumo operacional */}
       <section className="dashboard-bottom-grid">
 
+        {/* Resumo de vendas */}
         <article className="dashboard-panel card">
 
           <div className="dashboard-panel-header">
 
             <div>
               <h3>Resumo de vendas</h3>
+
               <p>Situação dos pedidos cadastrados</p>
             </div>
 
@@ -280,16 +316,19 @@ export default function Dashboard() {
 
             <div className="sales-summary-item">
               <span>Pedidos em aberto</span>
+
               <strong>{debts.length}</strong>
             </div>
 
             <div className="sales-summary-item">
               <span>Pedidos fechados</span>
+
               <strong>{closedDebts.length}</strong>
             </div>
 
             <div className="sales-summary-item">
               <span>Total de pedidos</span>
+
               <strong>{totalOrders}</strong>
             </div>
 
@@ -300,17 +339,20 @@ export default function Dashboard() {
             className="dashboard-panel-link"
           >
             Acessar vendas
+
             <span>→</span>
           </NavLink>
 
         </article>
 
+        {/* Gestão do negócio */}
         <article className="dashboard-panel card">
 
           <div className="dashboard-panel-header">
 
             <div>
               <h3>Gestão do negócio</h3>
+
               <p>Acesse os outros módulos</p>
             </div>
 
@@ -322,13 +364,17 @@ export default function Dashboard() {
 
             <NavLink to="/purchases">
               <FaReceipt />
+
               <span>Registrar compras</span>
+
               <span className="management-arrow">→</span>
             </NavLink>
 
             <NavLink to="/suppliers">
               <FaTruck />
+
               <span>Gerenciar fornecedores</span>
+
               <span className="management-arrow">→</span>
             </NavLink>
 

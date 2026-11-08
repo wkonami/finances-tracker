@@ -14,6 +14,8 @@ const purchaseRoutes = require('./routes/purchaseRoutes');
 
 const userRoutes = require('./routes/users');
 
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
 const FRONTEND_ORIGIN =
   process.env.FRONTEND_ORIGIN ||
   'http://localhost:3000';
@@ -44,6 +46,8 @@ app.use('/api/debts', debtRoutes);
 app.use('/api/purchases', purchaseRoutes);
 
 app.use('/api/users', userRoutes);
+
+app.use('/api/dashboard', dashboardRoutes);
 
 app.use((req, res) => {
 
