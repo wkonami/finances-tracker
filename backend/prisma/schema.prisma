@@ -12,9 +12,11 @@ model User {
   username  String    @unique
   password  String
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   role      Role      @default(USER)
   deletedAt DateTime?
-  debts     Debt[]
+
+  sales     Sale[]
   purchases Purchase[]
 }
 
@@ -23,6 +25,7 @@ model Purchase {
   description String            @db.VarChar(200)
   totalAmount Decimal           @db.Decimal(10, 2)
   createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   deletedAt   DateTime?
   userId      Int
   user        User              @relation(fields: [userId], references: [id])
@@ -38,29 +41,36 @@ model PurchasePayment {
   note        String?  @db.VarChar(500)
   purchaseId  Int
   purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseId, paymentDate])
 }
 
-model Debt {
+model Sale {
   id          Int       @id @default(autoincrement())
   debtorName  String
   totalAmount Decimal   @db.Decimal(10, 2)
   notes       String?
   delivered   Boolean   @default(false)
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
   userId      Int
   user        User      @relation(fields: [userId], references: [id])
   payments    Payment[]
+
+  @@map("Debt")
 }
 
 model Payment {
   id          Int      @id @default(autoincrement())
   amount      Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
-  debtId      Int
+  saleId      Int      @map("debtId")
   paymentDate DateTime
   note        String?
-  debt        Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId, paymentDate])
 }
 
 enum Role {

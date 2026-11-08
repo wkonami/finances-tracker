@@ -8,7 +8,7 @@ const app = express();
 
 const authRoutes = require('./routes/auth');
 
-const debtRoutes = require('./routes/debts');
+const saleRoutes = require('./routes/sales');
 
 const purchaseRoutes = require('./routes/purchaseRoutes');
 
@@ -41,7 +41,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 
-app.use('/api/debts', debtRoutes);
+app.use('/api/debts', saleRoutes);
 
 app.use('/api/purchases', purchaseRoutes);
 

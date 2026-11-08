@@ -110,7 +110,7 @@ async function getFinancialFlow(req, res) {
             gte: startDate,
             lt: endDate
           },
-          debt: {
+          sale: {
             is: {
               userId: req.user.id,
               deletedAt: null

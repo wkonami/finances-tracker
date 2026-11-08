@@ -6,28 +6,28 @@ const authMiddleware =
   require('../middlewares/authMiddleware');
 
 const {
-  createDebt,
-  listDebts,
-  getDebt,
-  updateDebt,
-  deleteDebt,
+  createSale,
+  listSales,
+  getSale,
+  updateSale,
+  deleteSale,
   markAsDelivered,
   markAsNotDelivered
-} = require('../controllers/debtController');
+} = require('../controllers/saleController');
 
 const {
   addPayment,
   listPayments,
   updatePayment,
   deletePayment
-} = require('../controllers/paymentController');
+} = require('../controllers/salePaymentController');
 
 router.use(authMiddleware);
 
 // dívidas
-router.post('/', createDebt);
+router.post('/', createSale);
 
-router.get('/', listDebts);
+router.get('/', listSales);
 
 
 // pagamentos
@@ -40,14 +40,14 @@ router.put('/payments/:paymentId', updatePayment);
 router.delete('/payments/:paymentId', deletePayment);
 
 // detalhes da dívida
-router.get('/:id', getDebt);
+router.get('/:id', getSale);
 
 router.patch('/:id/delivered', markAsDelivered);
 
 router.patch('/:id/not-delivered', markAsNotDelivered);
 
-router.put('/:id', updateDebt);
+router.put('/:id', updateSale);
 
-router.delete('/:id', deleteDebt);
+router.delete('/:id', deleteSale);
 
 module.exports = router;
