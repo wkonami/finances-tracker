@@ -102,6 +102,7 @@
     width: 100%;
     overflow-x: auto;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border: var(--color-border) solid 1px;
 }
 
 /* Estrutura do sistema */

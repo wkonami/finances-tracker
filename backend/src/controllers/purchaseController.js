@@ -53,6 +53,48 @@ function validateAmount(value) {
   return { valid: true, amount };
 }
 
+async function validateSupplier(supplierId, userId) {
+  if (
+    supplierId === undefined ||
+    supplierId === null ||
+    supplierId === ''
+  ) {
+    return { valid: true, supplierId: null };
+  }
+
+  const id = Number(supplierId);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return {
+      valid: false,
+      message: 'Fornecedor inválido'
+    };
+  }
+
+  const supplier = await prisma.supplier.findFirst({
+    where: {
+      id,
+      userId,
+      deletedAt: null
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (!supplier) {
+    return {
+      valid: false,
+      message: 'Fornecedor não encontrado ou indisponível'
+    };
+  }
+
+  return {
+    valid: true,
+    supplierId: supplier.id
+  };
+}
+
 function formatPurchase(purchase) {
   const totalPaid = purchase.payments.reduce(
     (sum, payment) => sum + Number(payment.amount),
@@ -92,6 +134,17 @@ async function createPurchase(req, res) {
       });
     }
 
+    const supplierValidation = await validateSupplier(
+      req.body.supplierId,
+      req.user.id
+    );
+
+    if (!supplierValidation.valid) {
+      return res.status(400).json({
+        message: supplierValidation.message
+      });
+    }
+
     const { description, totalAmount, notes } = req.body;
 
     if (
@@ -117,10 +170,12 @@ async function createPurchase(req, res) {
         description: descriptionValidation.value,
         totalAmount: amountValidation.amount,
         notes: normalizedNotes,
+        supplierId: supplierValidation.supplierId,
         userId: req.user.id
       },
       include: {
-        payments: true
+        payments: true,
+        supplier: true
       }
     });
 
@@ -146,7 +201,8 @@ async function listPurchases(req, res) {
           orderBy: {
             paymentDate: 'desc'
           }
-        }
+        },
+        supplier: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -214,7 +270,8 @@ async function getPurchase(req, res) {
           orderBy: {
             paymentDate: 'desc'
           }
-        }
+        },
+        supplier: true
       }
     });
 
@@ -242,27 +299,6 @@ async function updatePurchase(req, res) {
       return res.status(400).json({ message: 'ID inválido' });
     }
 
-    if (req.body.notes !== undefined) {
-        if (
-            req.body.notes !== null &&
-            typeof req.body.notes !== 'string'
-        ) {
-            return res.status(400).json({
-            message: 'Observação inválida'
-            });
-        }
-
-        const notes = req.body.notes?.trim() || null;
-
-        if (notes && notes.length > 500) {
-            return res.status(400).json({
-            message: 'A observação deve possuir no máximo 500 caracteres'
-            });
-        }
-
-        data.notes = notes;
-    }
-
     const purchase = await prisma.purchase.findFirst({
       where: {
         id,
@@ -281,6 +317,42 @@ async function updatePurchase(req, res) {
     }
 
     const data = {};
+
+    if (req.body.notes !== undefined) {
+      if (
+        req.body.notes !== null &&
+        typeof req.body.notes !== 'string'
+      ) {
+        return res.status(400).json({
+          message: 'Observação inválida'
+        });
+      }
+
+      const notes = req.body.notes?.trim() || null;
+
+      if (notes && notes.length > 500) {
+        return res.status(400).json({
+          message: 'A observação deve possuir no máximo 500 caracteres'
+        });
+      }
+
+      data.notes = notes;
+    }
+
+    if (req.body.supplierId !== undefined) {
+      const supplierValidation = await validateSupplier(
+        req.body.supplierId,
+        req.user.id
+      );
+
+      if (!supplierValidation.valid) {
+        return res.status(400).json({
+          message: supplierValidation.message
+        });
+      }
+
+      data.supplierId = supplierValidation.supplierId;
+    }
 
     if (req.body.description !== undefined) {
       const validation = validateDescription(req.body.description);
@@ -326,7 +398,10 @@ async function updatePurchase(req, res) {
     const updated = await prisma.purchase.update({
       where: { id },
       data,
-      include: { payments: true }
+      include: {
+        payments: true, 
+        supplier: true 
+      }
     });
 
     return res.json(formatPurchase(updated));

@@ -163,7 +163,7 @@ export default function Users() {
           <div className="field-row">
             <div className="field-group">
               <label htmlFor="username">
-                Nome de usuário
+                Nome
               </label>
 
               <input
@@ -210,8 +210,8 @@ export default function Users() {
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
-                <option value="USER">Usuário</option>
-                <option value="ADMIN">Administrador</option>
+                <option value="USER">User</option>
+                <option value="ADMIN">Admin</option>
               </select>
             </div>
           </div>
@@ -294,8 +294,8 @@ export default function Users() {
                         }`}
                       >
                         {user.role === 'ADMIN'
-                          ? 'Administrador'
-                          : 'Usuário'}
+                          ? 'Admin'
+                          : 'User'}
                       </span>
                     </td>
 

@@ -16,6 +16,8 @@ const userRoutes = require('./routes/users');
 
 const dashboardRoutes = require('./routes/dashboardRoutes');
 
+const supplierRoutes = require('./routes/suppliers');
+
 const FRONTEND_ORIGIN =
   process.env.FRONTEND_ORIGIN ||
   'http://localhost:3000';
@@ -48,6 +50,8 @@ app.use('/api/purchases', purchaseRoutes);
 app.use('/api/users', userRoutes);
 
 app.use('/api/dashboard', dashboardRoutes);
+
+app.use('/api/suppliers', supplierRoutes);
 
 app.use((req, res) => {
 

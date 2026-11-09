@@ -18,19 +18,23 @@ model User {
 
   sales     Sale[]
   purchases Purchase[]
+  suppliers Supplier[]
 }
 
 model Purchase {
-  id          Int               @id @default(autoincrement())
-  description String            @db.VarChar(200)
-  totalAmount Decimal           @db.Decimal(10, 2)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id          Int       @id @default(autoincrement())
+  description String    @db.VarChar(200)
+  totalAmount Decimal   @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
   userId      Int
-  user        User              @relation(fields: [userId], references: [id])
-  payments    PurchasePayment[]
-  notes       String?           @db.VarChar(500)
+  user        User      @relation(fields: [userId], references: [id])
+  supplierId  Int
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+
+  payments PurchasePayment[]
+  notes    String?           @db.VarChar(500)
 }
 
 model PurchasePayment {
@@ -64,12 +68,32 @@ model Payment {
   id          Int      @id @default(autoincrement())
   amount      Decimal  @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
-  saleId      Int      
+  saleId      Int
   paymentDate DateTime
   note        String?
   sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@index([saleId, paymentDate])
+}
+
+model Supplier {
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(150)
+  phone    String? @db.VarChar(30)
+  email    String? @db.VarChar(150)
+  document String? @db.VarChar(30)
+  notes    String? @db.VarChar(500)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  purchases Purchase[]
+
+  @@index([userId, deletedAt])
 }
 
 enum Role {
