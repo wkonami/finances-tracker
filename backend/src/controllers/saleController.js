@@ -578,6 +578,197 @@ async function markAsNotDelivered(req, res) {
   }
 }
 
+const MAX_SYNC_BATCH_SIZE = 50;
+
+function isValidExternalId(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+async function syncSales(req, res) {
+  try {
+    const { sales } = req.body;
+
+    // Validação do lote
+    if (!Array.isArray(sales) || sales.length === 0) {
+      return res.status(400).json({
+        message: 'Informe pelo menos uma venda para sincronizar'
+      });
+    }
+
+    if (sales.length > MAX_SYNC_BATCH_SIZE) {
+      return res.status(400).json({
+        message: `O lote não pode ultrapassar ${MAX_SYNC_BATCH_SIZE} vendas`
+      });
+    }
+
+    const results = [];
+
+    const summary = {
+      total: sales.length,
+      created: 0,
+      alreadySynced: 0,
+      failed: 0
+    };
+
+    // Processa cada venda individualmente
+    for (const saleData of sales) {
+      const externalId = saleData?.externalId;
+
+      try {
+        // Validação do identificador
+        if (!isValidExternalId(externalId)) {
+          throw new Error('Identificador externo inválido');
+        }
+
+        const normalizedExternalId = externalId.toLowerCase();
+
+        // Verifica se a venda já foi sincronizada
+        const existingSale = await prisma.sale.findUnique({
+          where: {
+            externalId: normalizedExternalId
+          },
+          select: {
+            id: true,
+            userId: true
+          }
+        });
+
+        if (existingSale) {
+          // Não permite reutilizar UUID de outro usuário
+          if (existingSale.userId !== req.user.id) {
+            throw new Error('Identificador já utilizado');
+          }
+
+          summary.alreadySynced++;
+
+          results.push({
+            externalId,
+            status: 'already_synced',
+            saleId: existingSale.id
+          });
+
+          continue;
+        }
+
+        // Validação dos dados
+        const nameValidation = validateDebtorName(
+          saleData.debtorName
+        );
+
+        if (!nameValidation.valid) {
+          throw new Error(nameValidation.message);
+        }
+
+        const amountValidation = validateAmount(
+          saleData.totalAmount
+        );
+
+        if (!amountValidation.valid) {
+          throw new Error(amountValidation.message);
+        }
+
+        const notesValidation = validateNotes(
+          saleData.notes
+        );
+
+        if (!notesValidation.valid) {
+          throw new Error(notesValidation.message);
+        }
+
+        // Cadastro da venda
+        const createdSale = await prisma.sale.create({
+          data: {
+            externalId: normalizedExternalId,
+            debtorName: nameValidation.value,
+            totalAmount: amountValidation.amount,
+            notes: notesValidation.value,
+
+            // Nunca utilizar userId recebido do Android
+            userId: req.user.id
+          },
+          select: {
+            id: true,
+            externalId: true
+          }
+        });
+
+        summary.created++;
+
+        results.push({
+          externalId: createdSale.externalId,
+          status: 'created',
+          saleId: createdSale.id
+        });
+
+      } catch (error) {
+        // Trata concorrência: outra requisição pode ter
+        // sincronizado o mesmo UUID simultaneamente.
+        if (
+          error.code === 'P2002' &&
+          isValidExternalId(externalId)
+        ) {
+          const existingSale = await prisma.sale.findUnique({
+            where: {
+              externalId: externalId.toLowerCase()
+            },
+            select: {
+              id: true,
+              userId: true
+            }
+          });
+
+          if (
+            existingSale &&
+            existingSale.userId === req.user.id
+          ) {
+            summary.alreadySynced++;
+
+            results.push({
+              externalId,
+              status: 'already_synced',
+              saleId: existingSale.id
+            });
+
+            continue;
+          }
+        }
+
+        summary.failed++;
+
+        results.push({
+          externalId: externalId || null,
+          status: 'error',
+          message: error.message || 'Erro ao sincronizar venda'
+        });
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Sincronização processada',
+      summary,
+      results
+    });
+
+  } catch (error) {
+    console.error({
+      error: error.message,
+      stack: error.stack,
+      endpoint: req.originalUrl,
+      method: req.method,
+      userId: req.user?.id
+    });
+
+    return res.status(500).json({
+      message: 'Erro interno ao sincronizar vendas'
+    });
+  }
+}
+
+
 module.exports = {
   createSale,
   listSales,
@@ -586,6 +777,7 @@ module.exports = {
   deleteSale,
   markAsDelivered,
   markAsNotDelivered,
+  syncSales,
 
   // Compatibilidade temporária com as rotas antigas.
   createDebt: createSale,

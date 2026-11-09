@@ -47,6 +47,7 @@ model PurchasePayment {
 
 model Sale {
   id          Int       @id @default(autoincrement())
+  externalId  String?   @unique @db.Uuid
   debtorName  String
   totalAmount Decimal   @db.Decimal(10, 2)
   notes       String?

@@ -12,7 +12,8 @@ const {
   updateSale,
   deleteSale,
   markAsDelivered,
-  markAsNotDelivered
+  markAsNotDelivered,
+  syncSales
 } = require('../controllers/saleController');
 
 const {
@@ -23,6 +24,9 @@ const {
 } = require('../controllers/salePaymentController');
 
 router.use(authMiddleware);
+
+// Sincronização do PDV offline
+router.post('/sync', syncSales);
 
 // dívidas
 router.post('/', createSale);
