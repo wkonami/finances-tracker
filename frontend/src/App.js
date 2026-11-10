@@ -21,6 +21,7 @@ import DebtDetails from './pages/DebtDetails';
 import Users from './pages/Users';
 import Sales from './pages/Sales';
 import Purchases from './pages/Purchases';
+import Suppliers from './pages/Suppliers';
 
 import MainLayout from './layouts/MainLayout';
 
@@ -145,6 +146,11 @@ export default function App() {
             <Route
               path="/debt/:id"
               element={<DebtDetails />}
+            />
+
+            <Route
+              path="/suppliers"
+              element={<Suppliers />}
             />
 
             {/* Área administrativa */}

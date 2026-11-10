@@ -59,12 +59,35 @@ async function validateSupplier(supplierId, userId) {
     supplierId === null ||
     supplierId === ''
   ) {
-    return { valid: true, supplierId: null };
+    return {
+      valid: false,
+      message: 'O fornecedor é obrigatório'
+    };
+  }
+
+  if (
+    typeof supplierId !== 'number' &&
+    typeof supplierId !== 'string'
+  ) {
+    return {
+      valid: false,
+      message: 'Fornecedor inválido'
+    };
+  }
+
+  if (
+    typeof supplierId === 'string' &&
+    !/^\d+$/.test(supplierId.trim())
+  ) {
+    return {
+      valid: false,
+      message: 'Fornecedor inválido'
+    };
   }
 
   const id = Number(supplierId);
 
-  if (!Number.isInteger(id) || id <= 0) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
     return {
       valid: false,
       message: 'Fornecedor inválido'

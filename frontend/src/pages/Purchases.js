@@ -13,7 +13,8 @@ import {
   FaCalendarAlt,
   FaHistory,
   FaSave,
-  FaCreditCard
+  FaCreditCard,
+  FaTruck
 } from 'react-icons/fa';
 
 import api from '../services/api';
@@ -35,12 +36,15 @@ const formatDate = (value) => {
 const initialForm = {
   description: '',
   totalAmount: '',
+  supplierId: '',
   notes: ''
 };
 
 export default function Purchases() {
   const [purchases, setPurchases] = useState([]);
   const [paidPurchases, setPaidPurchases] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   const [summary, setSummary] = useState({
     totalAmount: 0,
     totalPaid: 0,
@@ -79,6 +83,27 @@ export default function Purchases() {
   });
 
   const [savingPayment, setSavingPayment] = useState(false);
+
+  const fetchSuppliers = useCallback(async () => {
+    try {
+      setLoadingSuppliers(true);
+
+      const response = await api.get('/suppliers');
+
+      setSuppliers(response.data.suppliers || response.data || []);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        'Não foi possível carregar os fornecedores.'
+      );
+    } finally {
+      setLoadingSuppliers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, [fetchSuppliers]);
 
   const fetchPurchases = useCallback(async () => {
     try {
@@ -127,6 +152,9 @@ export default function Purchases() {
     setForm({
       description: purchase.description,
       totalAmount: Number(purchase.totalAmount).toFixed(2),
+      supplierId: String(
+        purchase.supplierId || purchase.supplier?.id || ''
+      ),
       notes: purchase.notes || ''
     });
 
@@ -166,15 +194,37 @@ export default function Purchases() {
       return;
     }
 
+    if (!form.supplierId) {
+      setError('Selecione um fornecedor para a compra.');
+      return;
+    }
+
     try {
       setSaving(true);
       setError('');
 
+      
       const payload = {
         description: form.description.trim(),
         totalAmount: amount,
         notes: form.notes.trim()
       };
+
+      const selectedSupplier = suppliers.find(
+        (supplier) =>
+          String(supplier.id) === String(form.supplierId)
+      );
+
+      const isKeepingArchivedSupplier =
+        editingPurchase &&
+        editingPurchase.supplier &&
+        String(editingPurchase.supplier.id) === String(form.supplierId) &&
+        !selectedSupplier;
+
+      if (!isKeepingArchivedSupplier) {
+        payload.supplierId = Number(form.supplierId);
+      }
+
 
       if (editingPurchase) {
         await api.put(
@@ -423,6 +473,12 @@ export default function Purchases() {
         <button
           className="button button-primary"
           onClick={openNewForm}
+          disabled={loadingSuppliers || suppliers.length === 0}
+          title={
+            suppliers.length === 0
+              ? 'Cadastre um fornecedor primeiro'
+              : 'Nova compra'
+          }
         >
           <FaPlus />
           Nova compra
@@ -551,6 +607,11 @@ export default function Purchases() {
                       <span className="record-meta">
                         <FaCalendarAlt />
                         {formatDate(purchase.createdAt)}
+                      </span>
+
+                      <span className="record-meta">
+                        <FaTruck />
+                        {purchase.supplier?.name || 'Fornecedor não identificado'}
                       </span>
                     </div>
                   </div>
@@ -691,6 +752,58 @@ export default function Purchases() {
                     maxLength={200}
                     required
                 />
+
+
+                <div className="field">
+                  <label htmlFor="purchase-supplier">
+                    Fornecedor *
+                  </label>
+
+                  <select
+                    id="purchase-supplier"
+                    name="supplierId"
+                    className="field"
+                    value={form.supplierId}
+                    onChange={handleFormChange}
+                    required
+                    disabled={loadingSuppliers || saving}
+                  >
+                    <option value="">
+                      {loadingSuppliers
+                        ? 'Carregando fornecedores...'
+                        : 'Selecione um fornecedor'}
+                    </option>
+
+                    {editingPurchase?.supplier &&
+                      !suppliers.some(
+                        (supplier) =>
+                          String(supplier.id) ===
+                          String(editingPurchase.supplier.id)
+                      ) && (
+                        <option
+                          value={String(editingPurchase.supplier.id)}
+                          disabled
+                        >
+                          {editingPurchase.supplier.name} (arquivado)
+                        </option>
+                      )}
+
+                    {suppliers.map((supplier) => (
+                      <option
+                        key={supplier.id}
+                        value={String(supplier.id)}
+                      >
+                        {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {suppliers.length === 0 && !loadingSuppliers && (
+                    <small>
+                      Cadastre um fornecedor antes de registrar uma compra.
+                    </small>
+                  )}
+                </div>
 
                 <input
                     type="number"

@@ -114,7 +114,11 @@ async function listSuppliers(req, res) {
       include: {
         _count: {
           select: {
-            purchases: true
+            purchases: {
+              where: {
+                deletedAt: null
+              }
+            }
           }
         }
       },
@@ -152,7 +156,11 @@ async function getSupplier(req, res) {
       include: {
         _count: {
           select: {
-            purchases: true
+            purchases: {
+              where: {
+                deletedAt: null
+              }
+            }
           }
         }
       }
