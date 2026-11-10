@@ -105,9 +105,9 @@ function FinancialFlowChart() {
           onChange={(event) => setMonths(Number(event.target.value))}
           aria-label="Período do fluxo financeiro"
         >
+          <option value={3}>3 meses</option>
           <option value={6}>6 meses</option>
           <option value={12}>12 meses</option>
-          <option value={24}>24 meses</option>
         </select>
 
         <FaChartLine />
@@ -195,8 +195,10 @@ function FinancialFlowChart() {
                 }}
                 contentStyle={{
                   borderRadius: 8,
-                  border: '1px solid var(--border-color)'
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--color-background)'
                 }}
+                cursor = {{fill: 'var(--color-surface-hover)'}}
               />
 
               <Bar

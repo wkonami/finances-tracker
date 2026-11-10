@@ -14,7 +14,6 @@ import {
   FaReceipt,
   FaMoneyBillWave,
   FaBoxOpen,
-  FaClock,
   FaChartPie,
   FaTruck,
   FaWallet,
@@ -47,6 +46,7 @@ export default function Dashboard() {
   const [refreshError, setRefreshError] = useState('');
 
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [purchasesSummary, setPurchasesSummary] = useState(null);
 
   // Carrega os dados da Dashboard
   const loadDashboard = useCallback(async (isRefresh = false) => {
@@ -61,11 +61,18 @@ export default function Dashboard() {
         setError('');
       }
 
-      const response = await api.get('/debts');
+      const [debtsResponse, purchasesResponse] = await Promise.all([
+        api.get('/debts'),
+        api.get('/purchases')
+      ]);
 
-      setSummary(response.data.summary || null);
-      setDebts(response.data.debts || []);
-      setClosedDebts(response.data.closedDebts || []);
+      // Dados de vendas
+      setSummary(debtsResponse.data.summary || null);
+      setDebts(debtsResponse.data.debts || []);
+      setClosedDebts(debtsResponse.data.closedDebts || []);
+
+      // Dados financeiros das compras
+      setPurchasesSummary(purchasesResponse.data.summary || null);
 
       setLastUpdated(new Date());
 
@@ -96,34 +103,39 @@ export default function Dashboard() {
   const totalOrders = debts.length + closedDebts.length;
 
   // Indicadores financeiros
+  // Indicadores financeiros e operacionais
   const indicators = [
     {
       title: 'Total a receber',
       value: formatCurrency(summary?.totalOpen),
-      description: 'Valores pendentes de recebimento',
+      description: 'Saldo pendente das vendas',
       icon: <FaMoneyBillWave />,
-      color: 'primary'
+      color: 'primary',
+      type: 'financial'
+    },
+    {
+      title: 'A pagar em compras',
+      value: formatCurrency(purchasesSummary?.totalOpen),
+      description: 'Saldo pendente com fornecedores',
+      icon: <FaWallet />,
+      color: 'red',
+      type: 'financial-negative'
     },
     {
       title: 'Pedidos em aberto',
       value: debts.length,
       description: 'Pedidos ainda não finalizados',
       icon: <FaShoppingBag />,
-      color: 'blue'
+      color: 'blue',
+      type: 'operational'
     },
     {
       title: 'Entregas pendentes',
       value: summary?.pendingDeliveries ?? 0,
       description: 'Pedidos aguardando entrega',
       icon: <FaBoxOpen />,
-      color: 'orange'
-    },
-    {
-      title: 'Aguardando pagamento',
-      value: summary?.awaitingPayment ?? 0,
-      description: 'Pedidos com saldo pendente',
-      icon: <FaClock />,
-      color: 'purple'
+      color: 'purple',
+      type: 'operational'
     }
   ];
 
@@ -221,7 +233,7 @@ export default function Dashboard() {
 
             <article
               key={indicator.title}
-              className="dashboard-indicator card"
+              className={`dashboard-indicator card dashboard-indicator--${indicator.type}`}
             >
 
               <div className="indicator-top">

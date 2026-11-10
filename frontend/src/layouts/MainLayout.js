@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   NavLink,
@@ -17,6 +16,8 @@ import {
   FaBars,
   FaSignOutAlt,
   FaWallet,
+  FaChevronLeft,
+  FaChevronRight
 } from 'react-icons/fa';
 
 import ThemeToggle from '../components/ThemeToggle';
@@ -59,8 +60,19 @@ export default function MainLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar-collapsed') === 'true';
+  });
+
   const role = localStorage.getItem('role');
   const username = localStorage.getItem('username');
+
+  useEffect(() => {
+    localStorage.setItem(
+      'sidebar-collapsed',
+      String(sidebarCollapsed)
+    );
+  }, [sidebarCollapsed]);
 
   function logout() {
     localStorage.removeItem('token');
@@ -75,21 +87,53 @@ export default function MainLayout() {
     setSidebarOpen(false);
   }
 
+  function toggleSidebar() {
+    setSidebarCollapsed((current) => !current);
+  }
+
   return (
-    <div className="app-layout">
-
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-
+    <div
+      className={`app-layout ${
+        sidebarCollapsed ? 'sidebar-collapsed' : ''
+      }`}
+    >
+      <aside
+        className={`sidebar ${
+          sidebarOpen ? 'sidebar-open' : ''
+        }`}
+      >
         <div className="sidebar-brand">
           <div className="sidebar-brand-icon">
             <FaWallet />
           </div>
 
-          <div>
+          <div className="sidebar-brand-text">
             <h2>Finances</h2>
             <span>Gestão financeira</span>
           </div>
         </div>
+
+        <button
+          type="button"
+          className="sidebar-collapse-toggle"
+          onClick={toggleSidebar}
+          title={
+            sidebarCollapsed
+              ? 'Expandir menu'
+              : 'Recolher menu'
+          }
+          aria-label={
+            sidebarCollapsed
+              ? 'Expandir menu lateral'
+              : 'Recolher menu lateral'
+          }
+          aria-expanded={!sidebarCollapsed}
+        >
+          {sidebarCollapsed
+            ? <FaChevronRight />
+            : <FaChevronLeft />
+          }
+        </button>
 
         <div className="sidebar-section-label">
           MENU PRINCIPAL
@@ -101,6 +145,7 @@ export default function MainLayout() {
               key={item.path}
               to={item.path}
               end={item.path === '/dashboard'}
+              title={sidebarCollapsed ? item.label : undefined}
               className={({ isActive }) =>
                 `sidebar-link ${isActive ? 'active' : ''}`
               }
@@ -123,6 +168,7 @@ export default function MainLayout() {
 
             <NavLink
               to="/users"
+              title={sidebarCollapsed ? 'Usuários' : undefined}
               className={({ isActive }) =>
                 `sidebar-link ${isActive ? 'active' : ''}`
               }
@@ -137,46 +183,42 @@ export default function MainLayout() {
           </div>
         )}
 
-                  
-          <div className="sidebar-footer">
-
-            <div className="sidebar-user">
-              <div className="sidebar-avatar">
-                {username?.charAt(0).toUpperCase() || 'U'}
-              </div>
-
-              <div className="sidebar-user-info">
-                <strong>{username || 'Usuário'}</strong>
-                <span>{role || 'USER'}</span>
-              </div>
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div
+              className="sidebar-avatar"
+              title={username || 'Usuário'}
+            >
+              {username?.charAt(0).toUpperCase() || 'U'}
             </div>
 
-            <div className="sidebar-actions">
-
-              <ThemeToggle />
-
-              <button
-                type="button"
-                className="sidebar-action"
-                onClick={logout}
-                title="Sair"
-                aria-label="Sair"
-              >
-                <FaSignOutAlt />
-              </button>
-
+            <div className="sidebar-user-info">
+              <strong>{username || 'Usuário'}</strong>
+              <span>{role || 'USER'}</span>
             </div>
-
           </div>
 
+          <div className="sidebar-actions">
+            <div className="sidebar-theme-toggle">
+              <ThemeToggle />
+            </div>
+
+            <button
+              type="button"
+              className="sidebar-action"
+              onClick={logout}
+              title="Sair"
+              aria-label="Sair"
+            >
+              <FaSignOutAlt />
+            </button>
+          </div>
+        </div>
       </aside>
 
       <main className="main-content">
-
         <header className="dashboard-header">
-
           <div className="dashboard-header-left">
-
             <button
               type="button"
               className="sidebar-mobile-toggle"
@@ -186,19 +228,12 @@ export default function MainLayout() {
             >
               <FaBars />
             </button>
-
-            
-
           </div>
 
-          <div className="dashboard-header-actions">
-            
-          </div>
-
+          <div className="dashboard-header-actions" />
         </header>
 
         <Outlet />
-
       </main>
 
       {sidebarOpen && (
@@ -209,7 +244,6 @@ export default function MainLayout() {
           aria-label="Fechar menu"
         />
       )}
-
     </div>
   );
 }
