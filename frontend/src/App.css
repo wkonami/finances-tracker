@@ -1451,3 +1451,62 @@
         animation: none;
     }
 }
+
+/* Evita barra de rolagem durante a expansão da sidebar */
+.sidebar {
+    overflow-x: hidden;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+/* Impede que os elementos internos ultrapassem a largura */
+.sidebar,
+.sidebar * {
+    box-sizing: border-box;
+}
+
+.sidebar-brand,
+.sidebar-section-label,
+.sidebar-link,
+.sidebar-footer,
+.sidebar-user,
+.sidebar-user-info,
+.sidebar-actions {
+    min-width: 0;
+}
+
+.sidebar-brand,
+.sidebar-link,
+.sidebar-user-info {
+    overflow: hidden;
+}
+
+/* Evita que os textos provoquem expansão horizontal */
+.sidebar-brand > div:last-child,
+.sidebar-link > span:last-child,
+.sidebar-section-label,
+.sidebar-user-info {
+    white-space: nowrap;
+}
+
+/* Navegação sem barra horizontal */
+.sidebar-navigation {
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Sidebar recolhida */
+.sidebar.sidebar-collapsed {
+    overflow-x: hidden;
+}
+
+/* Evita que a animação dos textos provoque overflow */
+.sidebar .sidebar-brand h2,
+.sidebar .sidebar-brand span,
+.sidebar .sidebar-section-label,
+.sidebar .sidebar-link > span:last-child,
+.sidebar .sidebar-user-info,
+.sidebar .sidebar-logout {
+    flex-shrink: 0;
+}
