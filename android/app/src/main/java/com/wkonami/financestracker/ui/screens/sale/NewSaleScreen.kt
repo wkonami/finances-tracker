@@ -1,4 +1,3 @@
-
 package com.wkonami.financestracker.ui.screens.sale
 
 import androidx.compose.foundation.layout.Arrangement
@@ -7,9 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -23,6 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
@@ -32,6 +34,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun NewSaleScreen(
     onBack: () -> Unit,
+    eventModeEnabled: Boolean,
+    eventName: String?,
     onSaveSale: suspend (String, Long, String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -63,32 +67,70 @@ fun NewSaleScreen(
         )
 
         Text(
-            text = "Preencha os dados da venda. Ela será salva neste aparelho.",
+            text = if (eventModeEnabled) {
+                "Esta venda será registrada no evento selecionado."
+            } else {
+                "Preencha os dados da venda. Ela será salva neste aparelho."
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        OutlinedTextField(
-            value = debtorName,
-            onValueChange = {
-                debtorName = it
-                errorMessage = null
-            },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Nome do devedor") },
-            placeholder = { Text("Digite o nome") },
-            singleLine = true,
-            enabled = !isSaving,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next
+        if (eventModeEnabled) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Evento",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Text(
+                        text = eventName ?: "Evento não selecionado",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Text(
+                        text = "Comprador: Não identificado",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        } else {
+            OutlinedTextField(
+                value = debtorName,
+                onValueChange = {
+                    debtorName = it
+                    errorMessage = null
+                },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Nome do comprador") },
+                placeholder = { Text("Digite o nome") },
+                singleLine = true,
+                enabled = !isSaving,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next
+                )
             )
-        )
+        }
 
         OutlinedTextField(
             value = amount,
             onValueChange = {
-                amount = it
-                    .filter { char -> char.isDigit() || char == ',' || char == '.' }
+                amount = it.filter { char ->
+                    char.isDigit() || char == ',' || char == '.'
+                }
                 errorMessage = null
             },
             modifier = Modifier.fillMaxWidth(),
@@ -147,12 +189,16 @@ fun NewSaleScreen(
                 }
 
                 when {
-                    debtorName.isBlank() -> {
-                        errorMessage = "Informe o nome do devedor."
+                    !eventModeEnabled && debtorName.isBlank() -> {
+                        errorMessage = "Informe o nome do comprador."
                     }
 
                     amountInCents == null || amountInCents <= 0 -> {
                         errorMessage = "Informe um valor válido e maior que zero."
+                    }
+
+                    eventModeEnabled && eventName.isNullOrBlank() -> {
+                        errorMessage = "Nenhum evento está selecionado."
                     }
 
                     else -> {
@@ -162,7 +208,11 @@ fun NewSaleScreen(
 
                             try {
                                 onSaveSale(
-                                    debtorName.trim(),
+                                    if (eventModeEnabled) {
+                                        "Não identificado"
+                                    } else {
+                                        debtorName.trim()
+                                    },
                                     amountInCents,
                                     note.trim().takeIf { it.isNotEmpty() }
                                 )

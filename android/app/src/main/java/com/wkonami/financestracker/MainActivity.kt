@@ -17,7 +17,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.wkonami.financestracker.data.local.AppDatabase
+import com.wkonami.financestracker.data.local.EventModePreferences
+import com.wkonami.financestracker.data.local.EventModeState
 import com.wkonami.financestracker.data.remote.ApiClient
+import com.wkonami.financestracker.data.repository.EventRepository
 import com.wkonami.financestracker.data.repository.SaleRepository
 import com.wkonami.financestracker.data.repository.SyncRepository
 import com.wkonami.financestracker.data.repository.SyncPhase
@@ -60,6 +63,14 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                val eventRepository = remember(database) {
+                    EventRepository(database.eventDao())
+                }
+
+                val eventModePreferences = remember(context) {
+                    EventModePreferences(context)
+                }
+
                 val syncRepository = remember(database) {
                     SyncRepository(
                         saleDao = database.saleDao(),
@@ -76,6 +87,17 @@ class MainActivity : ComponentActivity() {
                 val sales by repository
                     .observeSales()
                     .collectAsState(initial = emptyList())
+
+                val events by eventRepository
+                    .observeEvents()
+                    .collectAsState(initial = emptyList())
+
+                val eventModeState by eventModePreferences.state
+                    .collectAsState(initial = EventModeState())
+
+                val selectedEvent = events.firstOrNull {
+                    it.localId == eventModeState.selectedEventId
+                }
 
                 var currentScreen by remember {
                     mutableStateOf(AppScreen.HOME)
@@ -98,6 +120,64 @@ class MainActivity : ComponentActivity() {
                         AppScreen.HOME -> {
                             HomeScreen(
                                 pendingSalesCount = pendingCount,
+                                eventModeEnabled = eventModeState.enabled,
+                                selectedEvent = selectedEvent,
+                                events = events,
+                                onEnableEventMode = { eventId ->
+                                    coroutineScope.launch {
+                                        try {
+                                            val event = eventRepository.findById(eventId)
+                                                ?: throw IllegalStateException(
+                                                    "O evento selecionado não existe."
+                                                )
+
+                                            eventModePreferences.enableWithEvent(
+                                                event.localId
+                                            )
+
+                                        } catch (error: Exception) {
+                                            Toast.makeText(
+                                                context,
+                                                error.message
+                                                    ?: "Não foi possível ativar o modo evento.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                },
+                                onDisableEventMode = {
+                                    coroutineScope.launch {
+                                        eventModePreferences.disable()
+                                    }
+                                },
+                                onCreateEvent = { name, location ->
+                                    coroutineScope.launch {
+                                        try {
+                                            val eventId = eventRepository.registerEvent(
+                                                name = name,
+                                                location = location,
+                                                startDate = null,
+                                                endDate = null
+                                            )
+
+                                            eventModePreferences.enableWithEvent(eventId)
+
+                                            Toast.makeText(
+                                                context,
+                                                "Evento cadastrado e ativado!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+
+                                        } catch (error: Exception) {
+                                            Toast.makeText(
+                                                context,
+                                                error.message
+                                                    ?: "Não foi possível cadastrar o evento.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                },
                                 onNewSaleClick = {
                                     currentScreen = AppScreen.NEW_SALE
                                 },
@@ -113,15 +193,31 @@ class MainActivity : ComponentActivity() {
 
                         AppScreen.NEW_SALE -> {
                             NewSaleScreen(
+                                eventModeEnabled = eventModeState.enabled,
+                                eventName = selectedEvent?.name,
                                 onBack = {
                                     currentScreen = AppScreen.HOME
                                 },
                                 onSaveSale = { debtorName, amountInCents, note ->
 
+                                    val eventId = if (eventModeState.enabled) {
+                                        selectedEvent?.localId
+                                            ?: throw IllegalStateException(
+                                                "Selecione um evento antes de registrar a venda."
+                                            )
+                                    } else {
+                                        null
+                                    }
+
                                     repository.registerSale(
-                                        debtorName = debtorName,
+                                        debtorName = if (eventId != null) {
+                                            "Não identificado"
+                                        } else {
+                                            debtorName
+                                        },
                                         amountInCents = amountInCents,
-                                        note = note
+                                        note = note,
+                                        eventId = eventId
                                     )
 
                                     currentScreen = AppScreen.HOME
