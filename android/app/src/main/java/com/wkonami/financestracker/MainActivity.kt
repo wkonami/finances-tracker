@@ -1,4 +1,3 @@
-
 package com.wkonami.financestracker
 
 import android.os.Bundle
@@ -55,7 +54,10 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val repository = remember(database) {
-                    SaleRepository(database.saleDao())
+                    SaleRepository(
+                        saleDao = database.saleDao(),
+                        eventDao = database.eventDao()
+                    )
                 }
 
                 val syncRepository = remember(database) {

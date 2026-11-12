@@ -84,7 +84,6 @@ async function validateSupplier(supplierId) {
   };
 }
 
-
 function formatPurchase(purchase) {
   const totalPaid = purchase.payments.reduce(
     (sum, payment) => sum + Number(payment.amount),
