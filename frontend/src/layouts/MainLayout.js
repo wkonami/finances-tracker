@@ -111,29 +111,31 @@ export default function MainLayout() {
             <h2>Finances</h2>
             <span>Gestão financeira</span>
           </div>
+
+          <button
+            type="button"
+            className="sidebar-collapse-toggle"
+            onClick={toggleSidebar}
+            title={
+              sidebarCollapsed
+                ? 'Expandir menu'
+                : 'Recolher menu'
+            }
+            aria-label={
+              sidebarCollapsed
+                ? 'Expandir menu lateral'
+                : 'Recolher menu lateral'
+            }
+            aria-expanded={!sidebarCollapsed}
+          >
+            {sidebarCollapsed
+              ? <FaChevronRight />
+              : <FaChevronLeft />
+            }
+          </button>
+
         </div>
 
-        <button
-          type="button"
-          className="sidebar-collapse-toggle"
-          onClick={toggleSidebar}
-          title={
-            sidebarCollapsed
-              ? 'Expandir menu'
-              : 'Recolher menu'
-          }
-          aria-label={
-            sidebarCollapsed
-              ? 'Expandir menu lateral'
-              : 'Recolher menu lateral'
-          }
-          aria-expanded={!sidebarCollapsed}
-        >
-          {sidebarCollapsed
-            ? <FaChevronRight />
-            : <FaChevronLeft />
-          }
-        </button>
 
         <div className="sidebar-section-label">
           MENU PRINCIPAL

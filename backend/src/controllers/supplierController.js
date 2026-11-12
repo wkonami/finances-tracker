@@ -1,106 +1,74 @@
-
 const prisma = require('../prismaClient');
+const normalizeSupplierName = require('../utils/normalizeSupplierName');
 
-const MAX_NAME_LENGTH = 150;
-const MAX_PHONE_LENGTH = 30;
-const MAX_EMAIL_LENGTH = 150;
-const MAX_DOCUMENT_LENGTH = 30;
-const MAX_NOTES_LENGTH = 500;
+function validateSupplierData(body) {
+  const name = normalizeSupplierName(body.name);
 
-function validateSupplierData(body, partial = false) {
-  const data = {};
+  const phone = body.phone?.trim() || null;
+  const email = body.email?.trim() || null;
+  const document = body.document?.trim() || null;
+  const notes = body.notes?.trim() || null;
 
-  if (!partial || body.name !== undefined) {
-    if (typeof body.name !== 'string' || !body.name.trim()) {
-      return {
-        valid: false,
-        message: 'O nome do fornecedor é obrigatório'
-      };
-    }
-
-    const name = body.name.trim();
-
-    if (name.length > MAX_NAME_LENGTH) {
-      return {
-        valid: false,
-        message: `O nome deve possuir no máximo ${MAX_NAME_LENGTH} caracteres`
-      };
-    }
-
-    data.name = name;
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error('Informe um e-mail válido.');
   }
 
-  const optionalFields = [
-    { field: 'phone', max: MAX_PHONE_LENGTH, label: 'Telefone' },
-    { field: 'email', max: MAX_EMAIL_LENGTH, label: 'E-mail' },
-    { field: 'document', max: MAX_DOCUMENT_LENGTH, label: 'Documento' },
-    { field: 'notes', max: MAX_NOTES_LENGTH, label: 'Observação' }
-  ];
-
-  for (const item of optionalFields) {
-    const value = body[item.field];
-
-    if (partial && value === undefined) {
-      continue;
-    }
-
-    if (value !== undefined && value !== null && typeof value !== 'string') {
-      return {
-        valid: false,
-        message: `${item.label} inválido`
-      };
-    }
-
-    const normalized = value?.trim() || null;
-
-    if (normalized && normalized.length > item.max) {
-      return {
-        valid: false,
-        message: `${item.label} deve possuir no máximo ${item.max} caracteres`
-      };
-    }
-
-    if (item.field === 'email' && normalized) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailRegex.test(normalized)) {
-        return {
-          valid: false,
-          message: 'E-mail inválido'
-        };
-      }
-    }
-
-    data[item.field] = normalized;
+  if (phone && phone.length > 30) {
+    throw new Error('O telefone deve ter no máximo 30 caracteres.');
   }
 
-  return { valid: true, data };
+  if (email && email.length > 150) {
+    throw new Error('O e-mail deve ter no máximo 150 caracteres.');
+  }
+
+  if (document && document.length > 30) {
+    throw new Error('O documento deve ter no máximo 30 caracteres.');
+  }
+
+  if (notes && notes.length > 500) {
+    throw new Error('As observações devem ter no máximo 500 caracteres.');
+  }
+
+  return {
+    name,
+    phone,
+    email,
+    document,
+    notes
+  };
+}
+
+function handleSupplierError(res, error) {
+  if (error.code === 'P2002') {
+    return res.status(409).json({
+      message: 'Já existe um fornecedor com esse nome.'
+    });
+  }
+
+  if (error.message) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }
+
+  console.error('Erro ao processar fornecedor:', error);
+
+  return res.status(500).json({
+    message: 'Erro interno ao processar fornecedor.'
+  });
 }
 
 async function createSupplier(req, res) {
   try {
-    const validation = validateSupplierData(req.body);
-
-    if (!validation.valid) {
-      return res.status(400).json({
-        message: validation.message
-      });
-    }
+    const data = validateSupplierData(req.body);
 
     const supplier = await prisma.supplier.create({
-      data: {
-        ...validation.data,
-        userId: req.user.id
-      }
+      data
     });
 
     return res.status(201).json(supplier);
   } catch (error) {
-    console.error('Erro ao criar fornecedor:', error);
-
-    return res.status(500).json({
-      message: 'Erro interno ao criar fornecedor'
-    });
+    return handleSupplierError(res, error);
   }
 }
 
@@ -108,7 +76,6 @@ async function listSuppliers(req, res) {
   try {
     const suppliers = await prisma.supplier.findMany({
       where: {
-        userId: req.user.id,
         deletedAt: null
       },
       include: {
@@ -116,7 +83,8 @@ async function listSuppliers(req, res) {
           select: {
             purchases: {
               where: {
-                deletedAt: null
+                deletedAt: null,
+                userId: req.user.id
               }
             }
           }
@@ -132,7 +100,7 @@ async function listSuppliers(req, res) {
     console.error('Erro ao listar fornecedores:', error);
 
     return res.status(500).json({
-      message: 'Erro interno ao listar fornecedores'
+      message: 'Erro ao listar fornecedores.'
     });
   }
 }
@@ -143,14 +111,13 @@ async function getSupplier(req, res) {
 
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({
-        message: 'ID inválido'
+        message: 'ID de fornecedor inválido.'
       });
     }
 
     const supplier = await prisma.supplier.findFirst({
       where: {
         id,
-        userId: req.user.id,
         deletedAt: null
       },
       include: {
@@ -158,7 +125,8 @@ async function getSupplier(req, res) {
           select: {
             purchases: {
               where: {
-                deletedAt: null
+                deletedAt: null,
+                userId: req.user.id
               }
             }
           }
@@ -168,7 +136,7 @@ async function getSupplier(req, res) {
 
     if (!supplier) {
       return res.status(404).json({
-        message: 'Fornecedor não encontrado'
+        message: 'Fornecedor não encontrado.'
       });
     }
 
@@ -177,7 +145,7 @@ async function getSupplier(req, res) {
     console.error('Erro ao buscar fornecedor:', error);
 
     return res.status(500).json({
-      message: 'Erro interno ao buscar fornecedor'
+      message: 'Erro ao buscar fornecedor.'
     });
   }
 }
@@ -188,50 +156,35 @@ async function updateSupplier(req, res) {
 
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({
-        message: 'ID inválido'
+        message: 'ID de fornecedor inválido.'
       });
     }
 
-    const supplier = await prisma.supplier.findFirst({
+    const existingSupplier = await prisma.supplier.findFirst({
       where: {
         id,
-        userId: req.user.id,
         deletedAt: null
       }
     });
 
-    if (!supplier) {
+    if (!existingSupplier) {
       return res.status(404).json({
-        message: 'Fornecedor não encontrado'
+        message: 'Fornecedor não encontrado.'
       });
     }
 
-    const validation = validateSupplierData(req.body, true);
+    const data = validateSupplierData(req.body);
 
-    if (!validation.valid) {
-      return res.status(400).json({
-        message: validation.message
-      });
-    }
-
-    if (Object.keys(validation.data).length === 0) {
-      return res.status(400).json({
-        message: 'Nenhuma alteração foi informada'
-      });
-    }
-
-    const updated = await prisma.supplier.update({
-      where: { id },
-      data: validation.data
+    const supplier = await prisma.supplier.update({
+      where: {
+        id
+      },
+      data
     });
 
-    return res.json(updated);
+    return res.json(supplier);
   } catch (error) {
-    console.error('Erro ao atualizar fornecedor:', error);
-
-    return res.status(500).json({
-      message: 'Erro interno ao atualizar fornecedor'
-    });
+    return handleSupplierError(res, error);
   }
 }
 
@@ -241,39 +194,41 @@ async function deleteSupplier(req, res) {
 
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({
-        message: 'ID inválido'
+        message: 'ID de fornecedor inválido.'
       });
     }
 
-    const supplier = await prisma.supplier.findFirst({
+    const existingSupplier = await prisma.supplier.findFirst({
       where: {
         id,
-        userId: req.user.id,
         deletedAt: null
       }
     });
 
-    if (!supplier) {
+    if (!existingSupplier) {
       return res.status(404).json({
-        message: 'Fornecedor não encontrado'
+        message: 'Fornecedor não encontrado.'
       });
     }
 
-    await prisma.supplier.update({
-      where: { id },
+    const supplier = await prisma.supplier.update({
+      where: {
+        id
+      },
       data: {
         deletedAt: new Date()
       }
     });
 
     return res.json({
-      message: 'Fornecedor arquivado com sucesso'
+      message: 'Fornecedor arquivado com sucesso.',
+      supplier
     });
   } catch (error) {
-    console.error('Erro ao excluir fornecedor:', error);
+    console.error('Erro ao arquivar fornecedor:', error);
 
     return res.status(500).json({
-      message: 'Erro interno ao excluir fornecedor'
+      message: 'Erro ao arquivar fornecedor.'
     });
   }
 }

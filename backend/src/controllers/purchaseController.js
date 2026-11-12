@@ -53,62 +53,28 @@ function validateAmount(value) {
   return { valid: true, amount };
 }
 
-async function validateSupplier(supplierId, userId) {
-  if (
-    supplierId === undefined ||
-    supplierId === null ||
-    supplierId === ''
-  ) {
-    return {
-      valid: false,
-      message: 'O fornecedor é obrigatório'
-    };
-  }
 
-  if (
-    typeof supplierId !== 'number' &&
-    typeof supplierId !== 'string'
-  ) {
-    return {
-      valid: false,
-      message: 'Fornecedor inválido'
-    };
-  }
-
-  if (
-    typeof supplierId === 'string' &&
-    !/^\d+$/.test(supplierId.trim())
-  ) {
-    return {
-      valid: false,
-      message: 'Fornecedor inválido'
-    };
-  }
-
+async function validateSupplier(supplierId) {
   const id = Number(supplierId);
 
-  if (!Number.isSafeInteger(id) || id <= 0) {
+  if (!Number.isInteger(id) || id <= 0) {
     return {
       valid: false,
-      message: 'Fornecedor inválido'
+      message: 'ID do fornecedor inválido.'
     };
   }
 
   const supplier = await prisma.supplier.findFirst({
     where: {
       id,
-      userId,
       deletedAt: null
-    },
-    select: {
-      id: true
     }
   });
 
   if (!supplier) {
     return {
       valid: false,
-      message: 'Fornecedor não encontrado ou indisponível'
+      message: 'Fornecedor inválido ou não encontrado.'
     };
   }
 
@@ -117,6 +83,7 @@ async function validateSupplier(supplierId, userId) {
     supplierId: supplier.id
   };
 }
+
 
 function formatPurchase(purchase) {
   const totalPaid = purchase.payments.reduce(
@@ -159,7 +126,6 @@ async function createPurchase(req, res) {
 
     const supplierValidation = await validateSupplier(
       req.body.supplierId,
-      req.user.id
     );
 
     if (!supplierValidation.valid) {
@@ -364,8 +330,7 @@ async function updatePurchase(req, res) {
 
     if (req.body.supplierId !== undefined) {
       const supplierValidation = await validateSupplier(
-        req.body.supplierId,
-        req.user.id
+        req.body.supplierId
       );
 
       if (!supplierValidation.valid) {
