@@ -35,6 +35,7 @@ import java.math.RoundingMode
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import com.wkonami.financestracker.ui.components.clearFocusOnTap
 
 private const val MAX_NOTE_LENGTH = 500
 
@@ -107,6 +108,7 @@ fun NewSaleScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .clearFocusOnTap()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)

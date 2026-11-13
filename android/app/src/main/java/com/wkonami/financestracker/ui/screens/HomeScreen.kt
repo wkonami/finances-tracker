@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wkonami.financestracker.data.local.EventEntity
 import com.wkonami.financestracker.ui.components.HomeActionCard
+import com.wkonami.financestracker.ui.components.clearFocusOnTap
 
 @Composable
 fun HomeScreen(
@@ -71,6 +72,7 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .clearFocusOnTap()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(22.dp)

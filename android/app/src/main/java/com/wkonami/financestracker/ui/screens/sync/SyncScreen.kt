@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.wkonami.financestracker.ui.components.clearFocusOnTap
 
 @Composable
 fun SyncScreen(
@@ -85,6 +86,7 @@ fun SyncScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .clearFocusOnTap()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
