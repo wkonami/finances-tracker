@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.wkonami.financestracker.data.local.AppDatabase
 import com.wkonami.financestracker.data.local.EventModePreferences
 import com.wkonami.financestracker.data.local.EventModeState
+import com.wkonami.financestracker.data.local.SyncCredentialsStorage
 import com.wkonami.financestracker.data.remote.ApiClient
 import com.wkonami.financestracker.data.repository.EventRepository
 import com.wkonami.financestracker.data.repository.SaleRepository
@@ -78,6 +79,10 @@ class MainActivity : ComponentActivity() {
                         saleDao = database.saleDao(),
                         apiClient = ApiClient(API_BASE_URL)
                     )
+                }
+
+                val syncCredentialsStorage = remember(context) {
+                    SyncCredentialsStorage(context)
                 }
 
                 val coroutineScope = rememberCoroutineScope()
@@ -301,7 +306,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
 
-                                onSync = { username, password ->
+                                onSync = { username, password, rememberCredentials ->
 
                                     if (isSyncing) return@SyncScreen
 
@@ -310,6 +315,7 @@ class MainActivity : ComponentActivity() {
 
                                     coroutineScope.launch {
                                         try {
+                                            // Executa a sincronização
                                             val result = syncRepository.synchronize(
                                                 username = username,
                                                 password = password,
@@ -318,6 +324,31 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
 
+                                            // Salva ou remove as credenciais
+                                            try {
+                                                if (rememberCredentials) {
+                                                    syncCredentialsStorage.save(
+                                                        username = username,
+                                                        password = password
+                                                    )
+                                                } else {
+                                                    syncCredentialsStorage.clear()
+                                                }
+                                            } catch (storageError: Exception) {
+                                                android.util.Log.e(
+                                                    "PDV_SYNC",
+                                                    "Não foi possível salvar as credenciais.",
+                                                    storageError
+                                                )
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "Sincronização concluída, mas não foi possível salvar as credenciais.",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+
+                                            // Resultado da sincronização
                                             Toast.makeText(
                                                 context,
                                                 """

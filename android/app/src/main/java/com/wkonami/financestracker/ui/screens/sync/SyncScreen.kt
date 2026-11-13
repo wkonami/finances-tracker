@@ -3,7 +3,6 @@ package com.wkonami.financestracker.ui.screens.sync
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,6 +32,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.wkonami.financestracker.data.repository.SyncPhase
 import com.wkonami.financestracker.data.repository.SyncProgress
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.platform.LocalContext
+import com.wkonami.financestracker.data.local.SyncCredentialsStorage
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun SyncScreen(
@@ -40,22 +46,46 @@ fun SyncScreen(
     progress: SyncProgress,
     isSyncing: Boolean,
     onBack: () -> Unit,
-    onSync: (String, String) -> Unit,
+    onSync: (String, String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
-    LaunchedEffect(progress.phase) {
-        if (progress.phase == SyncPhase.COMPLETED) {
-            password = ""
+    val credentialsStorage = remember(context) {
+        SyncCredentialsStorage(context)
+    }
+
+    var rememberCredentials by remember {
+        mutableStateOf(false)
+    }
+
+    var isLoadingCredentials by remember {
+        mutableStateOf(true)
+    }
+
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(credentialsStorage) {
+        try {
+            val savedCredentials = credentialsStorage.load()
+
+            if (savedCredentials != null) {
+                username = savedCredentials.username
+                password = savedCredentials.password
+                rememberCredentials = true
+            }
+        } finally {
+            isLoadingCredentials = false
         }
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
@@ -139,6 +169,33 @@ fun SyncScreen(
             )
         )
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = rememberCredentials,
+                onCheckedChange = { checked ->
+                    rememberCredentials = checked
+
+                    if (!checked) {
+                        scope.launch {
+                            credentialsStorage.clear()
+                        }
+                    }
+                },
+                enabled = !isSyncing && !isLoadingCredentials
+            )
+
+            Text(
+                text = "Lembrar usuário e senha",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         if (errorMessage != null) {
             Text(
                 text = errorMessage.orEmpty(),
@@ -168,7 +225,11 @@ fun SyncScreen(
 
                     else -> {
                         errorMessage = null
-                        onSync(username.trim(), password)
+                        onSync(
+                            username.trim(),
+                            password,
+                            rememberCredentials
+                        )
                     }
                 }
             },
@@ -176,7 +237,11 @@ fun SyncScreen(
                 .fillMaxWidth()
                 .padding(top = 8.dp),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isSyncing && pendingSalesCount > 0
+            enabled = (
+                !isSyncing &&
+                !isLoadingCredentials &&
+                pendingSalesCount > 0
+                )
         ) {
             if (isSyncing) {
                 CircularProgressIndicator(
@@ -240,7 +305,8 @@ private fun SyncProgressCard(
             ) {
                 if (
                     progress.phase == SyncPhase.PREPARING ||
-                    progress.phase == SyncPhase.AUTHENTICATING
+                    progress.phase == SyncPhase.AUTHENTICATING ||
+                    progress.phase == SyncPhase.SENDING
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.height(22.dp),
@@ -258,7 +324,7 @@ private fun SyncProgressCard(
             if (progress.total > 0) {
                 LinearProgressIndicator(
                     progress = {
-                        progress.percentage / 100f
+                        (progress.percentage / 100f).coerceIn(0f, 1f)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
