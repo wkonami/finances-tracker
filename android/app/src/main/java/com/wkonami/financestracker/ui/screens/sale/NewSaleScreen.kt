@@ -39,6 +39,9 @@ import com.wkonami.financestracker.ui.components.clearFocusOnTap
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import com.wkonami.financestracker.data.local.PaymentMethod
+import androidx.compose.material3.OutlinedButton
+import com.wkonami.financestracker.data.local.PixConfig
+import com.wkonami.financestracker.ui.components.PixQrCodeDialog
 
 private const val MAX_NOTE_LENGTH = 500
 
@@ -74,6 +77,7 @@ fun NewSaleScreen(
     onBack: () -> Unit,
     eventModeEnabled: Boolean,
     eventName: String?,
+    pixConfig: PixConfig,
     onSaveSale: suspend (
         String,
         Long,
@@ -94,6 +98,13 @@ fun NewSaleScreen(
     var isDelivered by remember { mutableStateOf(true) }
     var paymentMethod by remember {
         mutableStateOf<PaymentMethod?>(null)
+    }
+    var showPixDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var pixAmountInCents by remember {
+        mutableStateOf<Long?>(null)
     }
 
     val scope = rememberCoroutineScope()
@@ -326,6 +337,38 @@ fun NewSaleScreen(
                         )
                     }
                 }
+                if (paymentMethod == PaymentMethod.PIX) {
+
+                    OutlinedButton(
+                        onClick = {
+
+                            val parsedAmount = if (amount.isBlank()) {
+                                null
+                            } else {
+                                parseAmountToCents(amount)
+                            }
+
+                            when {
+                                amount.isNotBlank() &&
+                                    (parsedAmount == null || parsedAmount <= 0) -> {
+
+                                    errorMessage = "Informe um valor válido para gerar o QR Code."
+                                }
+
+                                else -> {
+                                    pixAmountInCents = parsedAmount
+                                    showPixDialog = true
+                                    errorMessage = null
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSaving,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("▦  GERAR QR")
+                    }
+                }
             }
         }
 
@@ -467,5 +510,14 @@ fun NewSaleScreen(
                 Text("Salvar venda")
             }
         }
+    }
+    if (showPixDialog) {
+        PixQrCodeDialog(
+            config = pixConfig,
+            amountInCents = pixAmountInCents,
+            onDismiss = {
+                showPixDialog = false
+            }
+        )
     }
 }

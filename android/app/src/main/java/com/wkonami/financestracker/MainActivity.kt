@@ -9,32 +9,35 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.wkonami.financestracker.data.local.AppDatabase
 import com.wkonami.financestracker.data.local.EventModePreferences
 import com.wkonami.financestracker.data.local.EventModeState
+import com.wkonami.financestracker.data.local.PixConfig
+import com.wkonami.financestracker.data.local.PixConfigStorage
 import com.wkonami.financestracker.data.local.SyncCredentialsStorage
 import com.wkonami.financestracker.data.remote.ApiClient
 import com.wkonami.financestracker.data.repository.EventRepository
 import com.wkonami.financestracker.data.repository.SaleRepository
-import com.wkonami.financestracker.data.repository.SyncRepository
 import com.wkonami.financestracker.data.repository.SyncPhase
 import com.wkonami.financestracker.data.repository.SyncProgress
+import com.wkonami.financestracker.data.repository.SyncRepository
 import com.wkonami.financestracker.ui.screens.HomeScreen
 import com.wkonami.financestracker.ui.screens.sale.NewSaleScreen
 import com.wkonami.financestracker.ui.screens.sale.SalesListScreen
 import com.wkonami.financestracker.ui.screens.sync.SyncScreen
 import com.wkonami.financestracker.ui.theme.FinancesTrackerPDVTheme
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import com.wkonami.financestracker.data.local.PaymentMethod
 
 private const val API_BASE_URL = "https://finances-q6s6.onrender.com/api"
 
@@ -86,7 +89,35 @@ class MainActivity : ComponentActivity() {
                     SyncCredentialsStorage(context)
                 }
 
+                val pixConfigStorage = remember(context) {
+                    PixConfigStorage(context)
+                }
+
                 val coroutineScope = rememberCoroutineScope()
+
+                // Configuração temporária do Pix para testes.
+                // Só salva os dados se ainda não houver uma configuração.
+                LaunchedEffect(Unit) {
+                    try {
+                        val savedConfig = pixConfigStorage.config.first()
+
+                        if (!savedConfig.isConfigured) {
+                            pixConfigStorage.save(
+                                PixConfig(
+                                    pixKey = "SUA_CHAVE_PIX",
+                                    merchantName = "NOME DO RECEBEDOR",
+                                    merchantCity = "SUA CIDADE"
+                                )
+                            )
+                        }
+                    } catch (error: Exception) {
+                        android.util.Log.e(
+                            "PIX_CONFIG",
+                            "Não foi possível carregar a configuração Pix.",
+                            error
+                        )
+                    }
+                }
 
                 val pendingCount by repository
                     .observePendingCount()
@@ -102,6 +133,9 @@ class MainActivity : ComponentActivity() {
 
                 val eventModeState by eventModePreferences.state
                     .collectAsState(initial = EventModeState())
+
+                val pixConfig by pixConfigStorage.config
+                    .collectAsState(initial = PixConfig())
 
                 val selectedEvent = events.firstOrNull {
                     it.localId == eventModeState.selectedEventId
@@ -236,6 +270,7 @@ class MainActivity : ComponentActivity() {
                             NewSaleScreen(
                                 eventModeEnabled = eventModeState.enabled,
                                 eventName = selectedEvent?.name,
+                                pixConfig = pixConfig,
 
                                 onBack = {
                                     navigateBack()

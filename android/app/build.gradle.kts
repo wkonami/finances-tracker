@@ -62,6 +62,8 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.11.0")
     implementation(libs.androidx.datastore.preferences)
+    // Geração local de QR Code
+    implementation("com.google.zxing:core:3.5.4")
 }
 
 ksp {
