@@ -3,8 +3,16 @@ const prisma = require('../prismaClient');
 const MAX_DEBTOR_NAME_LENGTH = 100;
 const MAX_NOTES_LENGTH = 500;
 const MAX_SALE_AMOUNT = 99999999.99;
+const MAX_SYNC_BATCH_SIZE = 50;
+
+const VALID_PAYMENT_METHODS = [
+  'CASH',
+  'PIX',
+  'CARD'
+];
 
 function validateAmount(value) {
+  const stringValue = String(value).trim();
   const amount = Number(value);
 
   if (!Number.isFinite(amount)) {
@@ -28,7 +36,7 @@ function validateAmount(value) {
     };
   }
 
-  if (!/^\d+(\.\d{1,2})?$/.test(String(value))) {
+  if (!/^\d+(\.\d{1,2})?$/.test(stringValue)) {
     return {
       valid: false,
       message: 'O valor deve possuir no máximo 2 casas decimais'
@@ -42,7 +50,11 @@ function validateAmount(value) {
 }
 
 function validateNotes(notes) {
-  if (notes === undefined || notes === null || notes === '') {
+  if (
+    notes === undefined ||
+    notes === null ||
+    notes === ''
+  ) {
     return {
       valid: true,
       value: null
@@ -94,6 +106,34 @@ function validateDebtorName(name) {
   };
 }
 
+function validatePaymentMethod(value, allowUnknown = false) {
+  if (
+    allowUnknown &&
+    (value === undefined || value === null || value === '')
+  ) {
+    return {
+      valid: true,
+      value: 'UNKNOWN'
+    };
+  }
+
+  const validMethods = allowUnknown
+    ? [...VALID_PAYMENT_METHODS, 'UNKNOWN']
+    : VALID_PAYMENT_METHODS;
+
+  if (!validMethods.includes(value)) {
+    return {
+      valid: false,
+      message: 'Forma de pagamento inválida'
+    };
+  }
+
+  return {
+    valid: true,
+    value
+  };
+}
+
 function calculateSaleStatus(sale) {
   const totalPaid = sale.payments.reduce(
     (sum, payment) => sum + Number(payment.amount),
@@ -115,6 +155,14 @@ function calculateSaleStatus(sale) {
     isPaid,
     isClosed
   };
+}
+
+function isValidExternalId(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 async function createSale(req, res) {
@@ -578,21 +626,10 @@ async function markAsNotDelivered(req, res) {
   }
 }
 
-const MAX_SYNC_BATCH_SIZE = 50;
-
-function isValidExternalId(value) {
-  if (typeof value !== 'string') {
-    return false;
-  }
-
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
-
 async function syncSales(req, res) {
   try {
     const { sales } = req.body;
 
-    // Validação do lote
     if (!Array.isArray(sales) || sales.length === 0) {
       return res.status(400).json({
         message: 'Informe pelo menos uma venda para sincronizar'
@@ -614,19 +651,16 @@ async function syncSales(req, res) {
       failed: 0
     };
 
-    // Processa cada venda individualmente
     for (const saleData of sales) {
       const externalId = saleData?.externalId;
 
       try {
-        // Validação do identificador
         if (!isValidExternalId(externalId)) {
           throw new Error('Identificador externo inválido');
         }
 
         const normalizedExternalId = externalId.toLowerCase();
 
-        // Verifica se a venda já foi sincronizada
         const existingSale = await prisma.sale.findUnique({
           where: {
             externalId: normalizedExternalId
@@ -638,7 +672,6 @@ async function syncSales(req, res) {
         });
 
         if (existingSale) {
-          // Não permite reutilizar UUID de outro usuário
           if (existingSale.userId !== req.user.id) {
             throw new Error('Identificador já utilizado');
           }
@@ -654,7 +687,6 @@ async function syncSales(req, res) {
           continue;
         }
 
-        // Validação dos dados
         const nameValidation = validateDebtorName(
           saleData.debtorName
         );
@@ -679,13 +711,20 @@ async function syncSales(req, res) {
           throw new Error(notesValidation.message);
         }
 
-        // Compatibilidade com versões antigas do aplicativo:
-        // se os campos não forem enviados, a venda será considerada
-        // não paga e não entregue.
         const isPaid = saleData.isPaid === true;
         const isDelivered = saleData.isDelivered === true;
 
-        // Cadastro da venda
+        const paymentMethodValidation = isPaid
+          ? validatePaymentMethod(saleData.paymentMethod, true)
+          : {
+              valid: true,
+              value: null
+            };
+
+        if (!paymentMethodValidation.valid) {
+          throw new Error(paymentMethodValidation.message);
+        }
+
         const createdSale = await prisma.sale.create({
           data: {
             externalId: normalizedExternalId,
@@ -694,19 +733,19 @@ async function syncSales(req, res) {
             notes: notesValidation.value,
             delivered: isDelivered,
 
-            // Registra o pagamento integral quando a venda
-            // chega marcada como paga pelo aplicativo.
             ...(isPaid && {
               payments: {
                 create: {
                   amount: amountValidation.amount,
                   paymentDate: new Date(),
+                  paymentMethod: paymentMethodValidation.value,
                   note: 'Pagamento integral registrado pelo PDV offline'
                 }
               }
             }),
 
-            // Nunca utilizar userId recebido do Android.
+            // A autoria é definida pelo usuário autenticado
+            // responsável pela sincronização.
             userId: req.user.id
           },
           select: {
@@ -714,7 +753,6 @@ async function syncSales(req, res) {
             externalId: true
           }
         });
-
 
         summary.created++;
 
@@ -725,8 +763,6 @@ async function syncSales(req, res) {
         });
 
       } catch (error) {
-        // Trata concorrência: outra requisição pode ter
-        // sincronizado o mesmo UUID simultaneamente.
         if (
           error.code === 'P2002' &&
           isValidExternalId(externalId)
@@ -787,7 +823,6 @@ async function syncSales(req, res) {
     });
   }
 }
-
 
 module.exports = {
   createSale,

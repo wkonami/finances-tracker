@@ -3,6 +3,12 @@ const prisma = require('../prismaClient');
 const MAX_PAYMENT_AMOUNT = 99999999.99;
 const MAX_NOTE_LENGTH = 500;
 
+const VALID_PAYMENT_METHODS = [
+  'CASH',
+  'PIX',
+  'CARD'
+];
+
 function validateAmount(value) {
   if (
     value === undefined ||
@@ -78,7 +84,8 @@ function validateNote(note) {
   if (trimmedNote.length > MAX_NOTE_LENGTH) {
     return {
       valid: false,
-      message: `A observação deve possuir no máximo ${MAX_NOTE_LENGTH} caracteres`
+      message:
+        `A observação deve possuir no máximo ${MAX_NOTE_LENGTH} caracteres`
     };
   }
 
@@ -88,7 +95,31 @@ function validateNote(note) {
   };
 }
 
+function validatePaymentMethod(value) {
+  if (!VALID_PAYMENT_METHODS.includes(value)) {
+    return {
+      valid: false,
+      message: 'Selecione uma forma de pagamento válida'
+    };
+  }
+
+  return {
+    valid: true,
+    value
+  };
+}
+
 function validatePaymentDate(value) {
+  if (
+    typeof value !== 'string' &&
+    !(value instanceof Date)
+  ) {
+    return {
+      valid: false,
+      message: 'Data de pagamento inválida'
+    };
+  }
+
   const parsedDate = new Date(value);
 
   if (Number.isNaN(parsedDate.getTime())) {
@@ -116,7 +147,9 @@ async function addPayment(req, res) {
 
     const {
       amount,
-      note
+      note,
+      paymentMethod,
+      paymentDate
     } = req.body;
 
     const amountValidation = validateAmount(amount);
@@ -127,11 +160,33 @@ async function addPayment(req, res) {
       });
     }
 
+    const methodValidation =
+      validatePaymentMethod(paymentMethod);
+
+    if (!methodValidation.valid) {
+      return res.status(400).json({
+        message: methodValidation.message
+      });
+    }
+
     const noteValidation = validateNote(note);
 
     if (!noteValidation.valid) {
       return res.status(400).json({
         message: noteValidation.message
+      });
+    }
+
+    const dateValidation = paymentDate !== undefined
+      ? validatePaymentDate(paymentDate)
+      : {
+          valid: true,
+          value: new Date()
+        };
+
+    if (!dateValidation.valid) {
+      return res.status(400).json({
+        message: dateValidation.message
       });
     }
 
@@ -169,8 +224,9 @@ async function addPayment(req, res) {
     const payment = await prisma.payment.create({
       data: {
         amount: amountValidation.amount,
-        paymentDate: new Date(),
+        paymentDate: dateValidation.value,
         note: noteValidation.value,
+        paymentMethod: methodValidation.value,
         sale: {
           connect: {
             id: saleId
@@ -209,7 +265,8 @@ async function updatePayment(req, res) {
     const {
       amount,
       paymentDate,
-      note
+      note,
+      paymentMethod
     } = req.body;
 
     const data = {};
@@ -248,6 +305,19 @@ async function updatePayment(req, res) {
       }
 
       data.note = noteValidation.value;
+    }
+
+    if (paymentMethod !== undefined) {
+      const methodValidation =
+        validatePaymentMethod(paymentMethod);
+
+      if (!methodValidation.valid) {
+        return res.status(400).json({
+          message: methodValidation.message
+        });
+      }
+
+      data.paymentMethod = methodValidation.value;
     }
 
     if (Object.keys(data).length === 0) {

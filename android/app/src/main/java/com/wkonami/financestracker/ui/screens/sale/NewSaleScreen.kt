@@ -36,13 +36,13 @@ import kotlinx.coroutines.launch
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import com.wkonami.financestracker.ui.components.clearFocusOnTap
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import com.wkonami.financestracker.data.local.PaymentMethod
 
 private const val MAX_NOTE_LENGTH = 500
 
 private val DEFAULT_QUICK_NOTES = listOf(
-    "Pix",
-    "Cartão",
-    "Dinheiro",
     "Colar",
     "Kanzashi",
     "Pulseira"
@@ -79,7 +79,8 @@ fun NewSaleScreen(
         Long,
         String?,
         Boolean,
-        Boolean
+        Boolean,
+        PaymentMethod?
     ) -> Unit,
     modifier: Modifier = Modifier,
     quickNotes: List<String> = DEFAULT_QUICK_NOTES
@@ -91,6 +92,9 @@ fun NewSaleScreen(
     var isSaving by remember { mutableStateOf(false) }
     var isPaid by remember { mutableStateOf(true) }
     var isDelivered by remember { mutableStateOf(true) }
+    var paymentMethod by remember {
+        mutableStateOf<PaymentMethod?>(null)
+    }
 
     val scope = rememberCoroutineScope()
 
@@ -290,6 +294,41 @@ fun NewSaleScreen(
             }
         }
 
+        if (isPaid) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Forma de pagamento",
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val methods = listOf(
+                        PaymentMethod.CASH to "Dinheiro",
+                        PaymentMethod.PIX to "Pix",
+                        PaymentMethod.CARD to "Cartão"
+                    )
+
+                    methods.forEach { (method, label) ->
+                        FilterChip(
+                            selected = paymentMethod == method,
+                            onClick = {
+                                paymentMethod = method
+                                errorMessage = null
+                            },
+                            enabled = !isSaving,
+                            label = { Text(label) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+        }
+
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -381,6 +420,10 @@ fun NewSaleScreen(
                         errorMessage = "Nenhum evento está selecionado."
                     }
 
+                    isPaid && paymentMethod == null -> {
+                        errorMessage = "Selecione a forma de pagamento."
+                    }
+
                     else -> {
                         scope.launch {
                             isSaving = true
@@ -396,7 +439,8 @@ fun NewSaleScreen(
                                     amountInCents,
                                     note.trim().takeIf { it.isNotEmpty() },
                                     isPaid,
-                                    isDelivered
+                                    isDelivered,
+                                    paymentMethod
                                 )
                             } catch (exception: Exception) {
                                 errorMessage = exception.message

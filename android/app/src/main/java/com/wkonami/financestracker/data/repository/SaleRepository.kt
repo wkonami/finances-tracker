@@ -5,6 +5,7 @@ import com.wkonami.financestracker.data.local.SaleDao
 import com.wkonami.financestracker.data.local.SaleEntity
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
+import com.wkonami.financestracker.data.local.PaymentMethod
 
 class SaleRepository(
     private val saleDao: SaleDao,
@@ -25,8 +26,22 @@ class SaleRepository(
         note: String?,
         eventId: Long? = null,
         isPaid: Boolean = true,
-        isDelivered: Boolean = true
+        isDelivered: Boolean = true,
+        paymentMethod: PaymentMethod? = null
     ): Long {
+
+        if (isPaid) {
+            require(
+                paymentMethod != null &&
+                paymentMethod != PaymentMethod.UNKNOWN
+            ) {
+                "Selecione a modalidade de pagamento."
+            }
+        } else {
+            require(paymentMethod == null) {
+                "Uma venda não paga não pode possuir modalidade de pagamento."
+            }
+        }
 
         require(debtorName.isNotBlank()) {
             "O nome do comprador é obrigatório."
@@ -50,7 +65,8 @@ class SaleRepository(
             eventId = eventId,
             isPaid = isPaid,
             isDelivered = isDelivered,
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            paymentMethod = paymentMethod
         )
 
         return saleDao.insert(sale)

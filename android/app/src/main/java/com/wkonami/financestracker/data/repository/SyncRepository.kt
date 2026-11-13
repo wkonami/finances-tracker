@@ -7,6 +7,7 @@ import com.wkonami.financestracker.data.remote.dto.SyncRequest
 import com.wkonami.financestracker.data.remote.dto.SyncSaleRequest
 import kotlinx.coroutines.CancellationException
 import java.util.Locale
+import com.wkonami.financestracker.data.local.PaymentMethod
 
 enum class SyncPhase {
     IDLE,
@@ -136,7 +137,12 @@ class SyncRepository(
                         ),
                         notes = sale.note,
                         isPaid = sale.isPaid,
-                        isDelivered = sale.isDelivered
+                        isDelivered = sale.isDelivered,
+                        paymentMethod = when {
+                            !sale.isPaid -> null
+                            sale.paymentMethod == null -> PaymentMethod.UNKNOWN.name
+                            else -> sale.paymentMethod.name
+                        }
                     )
                 }
             )

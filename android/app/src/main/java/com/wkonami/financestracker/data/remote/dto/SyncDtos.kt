@@ -22,7 +22,8 @@ data class SyncSaleRequest(
     val totalAmount: String,
     val notes: String?,
     val isPaid: Boolean,
-    val isDelivered: Boolean
+    val isDelivered: Boolean,
+    val paymentMethod: String? = null
 )
 
 data class SyncResponse(

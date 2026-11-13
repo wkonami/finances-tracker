@@ -11,6 +11,13 @@ enum class SyncStatus {
     ERROR
 }
 
+enum class PaymentMethod {
+    UNKNOWN,
+    CASH,
+    PIX,
+    CARD
+}
+
 @Entity(
     tableName = "sales",
     foreignKeys = [
@@ -43,6 +50,8 @@ data class SaleEntity(
     val eventId: Long? = null,
 
     val isPaid: Boolean = true,
+
+    val paymentMethod: PaymentMethod? = null,
 
     val isDelivered: Boolean = true,
 

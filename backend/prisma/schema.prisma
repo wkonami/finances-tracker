@@ -71,6 +71,7 @@ model Payment {
   paymentDate DateTime
   note        String?
   sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  paymentMethod PaymentMethod @default(UNKNOWN)
 
   @@index([saleId, paymentDate])
 }
@@ -96,4 +97,11 @@ enum Role {
   ADMIN
   MANAGER
   USER
+}
+
+enum PaymentMethod {
+  UNKNOWN
+  CASH
+  PIX
+  CARD
 }

@@ -34,6 +34,7 @@ import com.wkonami.financestracker.ui.screens.sale.SalesListScreen
 import com.wkonami.financestracker.ui.screens.sync.SyncScreen
 import com.wkonami.financestracker.ui.theme.FinancesTrackerPDVTheme
 import kotlinx.coroutines.launch
+import com.wkonami.financestracker.data.local.PaymentMethod
 
 private const val API_BASE_URL = "https://finances-q6s6.onrender.com/api"
 
@@ -245,7 +246,8 @@ class MainActivity : ComponentActivity() {
                                     amountInCents,
                                     note,
                                     isPaid,
-                                    isDelivered ->
+                                    isDelivered,
+                                    paymentMethod ->
 
                                     val eventId = if (eventModeState.enabled) {
                                         selectedEvent?.localId
@@ -266,7 +268,8 @@ class MainActivity : ComponentActivity() {
                                         note = note,
                                         eventId = eventId,
                                         isPaid = isPaid,
-                                        isDelivered = isDelivered
+                                        isDelivered = isDelivered,
+                                        paymentMethod = paymentMethod
                                     )
 
                                     navigateBack()

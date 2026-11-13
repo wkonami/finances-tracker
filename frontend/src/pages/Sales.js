@@ -56,6 +56,7 @@ export default function Sales() {
   const [paymentNote, setPaymentNote] = useState('');
   const [savingPayment, setSavingPayment] = useState(false);
   const [updatingDelivery, setUpdatingDelivery] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
 
   const loadDebts = useCallback(async () => {
     try {
@@ -85,6 +86,8 @@ export default function Sales() {
     setSelectedDebt(debt);
     setPaymentAmount(String(getRemainingAmount(debt)));
     setPaymentNote('');
+    setPaymentMethod('CASH');
+    setError('');
     setShowPaymentModal(true);
   }
 
@@ -95,6 +98,7 @@ export default function Sales() {
     setSelectedDebt(null);
     setPaymentAmount('');
     setPaymentNote('');
+    setPaymentMethod('CASH');
   }
 
   async function savePayment() {
@@ -118,7 +122,8 @@ export default function Sales() {
 
       await api.post(`/debts/${selectedDebt.id}/payments`, {
         amount,
-        note: paymentNote
+        note: paymentNote,
+        paymentMethod
       });
 
       setShowPaymentModal(false);
@@ -386,8 +391,10 @@ export default function Sales() {
         visible={showPaymentModal}
         amount={paymentAmount}
         note={paymentNote}
+        paymentMethod={paymentMethod}
         onAmountChange={setPaymentAmount}
         onNoteChange={setPaymentNote}
+        onPaymentMethodChange={setPaymentMethod}
         onCancel={closePaymentModal}
         onSave={savePayment}
       />

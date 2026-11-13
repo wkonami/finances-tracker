@@ -20,6 +20,19 @@ class DatabaseConverters {
     fun toSyncStatus(value: String): SyncStatus {
         return SyncStatus.valueOf(value)
     }
+
+    @TypeConverter
+    fun fromPaymentMethod(value: PaymentMethod?): String? {
+        return value?.name
+    }
+
+    @TypeConverter
+    fun toPaymentMethod(value: String?): PaymentMethod? {
+        return value?.let {
+            runCatching { PaymentMethod.valueOf(it) }
+                .getOrDefault(PaymentMethod.UNKNOWN)
+        }
+    }
 }
 
 @Database(
@@ -27,7 +40,7 @@ class DatabaseConverters {
         SaleEntity::class,
         EventEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(DatabaseConverters::class)
@@ -159,6 +172,23 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+
+            override fun migrate(db: SupportSQLiteDatabase) {
+
+                db.execSQL("""
+                    ALTER TABLE sales
+                    ADD COLUMN paymentMethod TEXT
+                """.trimIndent())
+
+                db.execSQL("""
+                    UPDATE sales
+                    SET paymentMethod = 'UNKNOWN'
+                    WHERE isPaid = 1
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
 
             return INSTANCE ?: synchronized(this) {
@@ -170,7 +200,8 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     .addMigrations(
                         MIGRATION_1_2,
-                        MIGRATION_2_3
+                        MIGRATION_2_3,
+                        MIGRATION_3_4
                     )
                     .build()
 
