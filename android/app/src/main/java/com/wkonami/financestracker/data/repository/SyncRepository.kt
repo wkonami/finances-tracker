@@ -134,7 +134,9 @@ class SyncRepository(
                             sale.amountInCents / 100,
                             sale.amountInCents % 100
                         ),
-                        notes = sale.note
+                        notes = sale.note,
+                        isPaid = sale.isPaid,
+                        isDelivered = sale.isDelivered
                     )
                 }
             )

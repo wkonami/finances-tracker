@@ -36,15 +36,16 @@ data class SaleEntity(
 
     val debtorName: String,
 
-    // Valor armazenado em centavos para evitar erros de ponto flutuante.
     val amountInCents: Long,
 
     val note: String? = null,
 
-    // Identificador local do evento. Nulo para vendas normais.
     val eventId: Long? = null,
 
-    // Data e hora em milissegundos desde 01/01/1970.
+    val isPaid: Boolean = true,
+
+    val isDelivered: Boolean = true,
+
     val createdAt: Long,
 
     val syncStatus: SyncStatus = SyncStatus.PENDING,

@@ -679,6 +679,12 @@ async function syncSales(req, res) {
           throw new Error(notesValidation.message);
         }
 
+        // Compatibilidade com versões antigas do aplicativo:
+        // se os campos não forem enviados, a venda será considerada
+        // não paga e não entregue.
+        const isPaid = saleData.isPaid === true;
+        const isDelivered = saleData.isDelivered === true;
+
         // Cadastro da venda
         const createdSale = await prisma.sale.create({
           data: {
@@ -686,8 +692,21 @@ async function syncSales(req, res) {
             debtorName: nameValidation.value,
             totalAmount: amountValidation.amount,
             notes: notesValidation.value,
+            delivered: isDelivered,
 
-            // Nunca utilizar userId recebido do Android
+            // Registra o pagamento integral quando a venda
+            // chega marcada como paga pelo aplicativo.
+            ...(isPaid && {
+              payments: {
+                create: {
+                  amount: amountValidation.amount,
+                  paymentDate: new Date(),
+                  note: 'Pagamento integral registrado pelo PDV offline'
+                }
+              }
+            }),
+
+            // Nunca utilizar userId recebido do Android.
             userId: req.user.id
           },
           select: {
@@ -695,6 +714,7 @@ async function syncSales(req, res) {
             externalId: true
           }
         });
+
 
         summary.created++;
 

@@ -1,6 +1,5 @@
 package com.wkonami.financestracker.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,18 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wkonami.financestracker.data.local.EventEntity
@@ -51,13 +50,23 @@ fun HomeScreen(
     onNewSaleClick: () -> Unit,
     onSalesClick: () -> Unit,
     onSyncClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onSettingsClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var showEventDialog by remember { mutableStateOf(false) }
     var showCreateForm by remember { mutableStateOf(false) }
+
     var eventName by remember { mutableStateOf("") }
     var eventLocation by remember { mutableStateOf("") }
     var eventError by remember { mutableStateOf<String?>(null) }
+
+    fun closeEventDialog() {
+        showEventDialog = false
+        showCreateForm = false
+        eventName = ""
+        eventLocation = ""
+        eventError = null
+    }
 
     Column(
         modifier = modifier
@@ -67,218 +76,87 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
 
-        // Cabeçalho
+        // Cabeçalho principal
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = "FINANCES",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
 
-                Text(
-                    text = "Tracker PDV",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
+            // Configurações
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "FT",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        // Apresentação
-        Column(
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = "Olá!",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Text(
-                text = "Registre suas vendas de forma rápida, mesmo sem internet.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // Modo evento
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (eventModeEnabled) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                IconButton(
+                    onClick = onSettingsClick,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .semantics {
+                            contentDescription = "Abrir configurações"
+                        }
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "Modo evento",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            text = if (eventModeEnabled) {
-                                "As próximas vendas serão vinculadas a um evento."
-                            } else {
-                                "Ative para registrar vendas vinculadas a um evento."
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Switch(
-                        checked = eventModeEnabled,
-                        onCheckedChange = { enabled ->
-                            if (enabled) {
-                                showEventDialog = true
-                            } else {
-                                onDisableEventMode()
-                            }
-                        }
-                    )
-                }
-
-                if (eventModeEnabled && selectedEvent != null) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(3.dp)
-                        ) {
-                            Text(
-                                text = "Evento ativo",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Text(
-                                text = selectedEvent.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-
-                            selectedEvent.location?.let { location ->
-                                Text(
-                                    text = location,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            showEventDialog = true
-                            showCreateForm = false
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Trocar evento")
-                    }
-                } else if (eventModeEnabled) {
                     Text(
-                        text = "O evento selecionado não foi encontrado. Selecione outro evento.",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                        text = "⚙",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    OutlinedButton(
-                        onClick = {
-                            showEventDialog = true
-                            showCreateForm = false
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Selecionar evento")
-                    }
                 }
             }
-        }
 
-        // Resumo de sincronização
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            // Nome centralizado
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Vendas pendentes",
+                    text = "Offline Helper",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = pendingSalesCount.toString(),
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    Text(
-                        text = "Aguardando envio",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-
-                Text(
-                    text = "As vendas ficam salvas neste aparelho até você enviar ao servidor.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    fontWeight = FontWeight.Bold
                 )
             }
+
+            // Modo evento
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Switch(
+                    checked = eventModeEnabled,
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            showEventDialog = true
+                        } else {
+                            onDisableEventMode()
+                        }
+                    },
+                    modifier = Modifier.semantics {
+                        contentDescription = "Ativar ou desativar modo evento"
+                    }
+                )
+
+                Text(
+                    text = "Evento",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Evento selecionado
+        if (eventModeEnabled) {
+            Text(
+                text = selectedEvent?.let {
+                    "Modo evento ativo: ${it.name}"
+                } ?: "Nenhum evento selecionado",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (selectedEvent == null) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         // Ações principais
@@ -304,6 +182,51 @@ fun HomeScreen(
                 description = "Consultar as vendas salvas no aparelho",
                 onClick = onSalesClick
             )
+        }
+
+        // Resumo de sincronização
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Vendas pendentes",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = pendingSalesCount.toString(),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Text(
+                        text = "Aguardando envio",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                Text(
+                    text = "As vendas ficam salvas neste aparelho até você enviar ao servidor.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
 
         // Sincronização
@@ -339,16 +262,19 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(8.dp))
     }
 
+    // Diálogo de eventos
     if (showEventDialog) {
         AlertDialog(
             onDismissRequest = {
-                showEventDialog = false
-                showCreateForm = false
-                eventError = null
+                closeEventDialog()
             },
             title = {
                 Text(
-                    if (showCreateForm) "Novo evento" else "Selecionar evento"
+                    if (showCreateForm) {
+                        "Novo evento"
+                    } else {
+                        "Selecionar evento"
+                    }
                 )
             },
             text = {
@@ -359,6 +285,7 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (showCreateForm) {
+
                         Text(
                             text = "Cadastre um evento para começar a registrar vendas nele.",
                             style = MaterialTheme.typography.bodyMedium
@@ -371,8 +298,12 @@ fun HomeScreen(
                                 eventError = null
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Nome do evento") },
-                            placeholder = { Text("Ex.: Feira de Artesanato") },
+                            label = {
+                                Text("Nome do evento")
+                            },
+                            placeholder = {
+                                Text("Ex.: Feira de Artesanato")
+                            },
                             singleLine = true
                         )
 
@@ -382,18 +313,22 @@ fun HomeScreen(
                                 eventLocation = it
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Local (opcional)") },
+                            label = {
+                                Text("Local (opcional)")
+                            },
                             singleLine = true
                         )
 
-                        if (eventError != null) {
+                        eventError?.let { error ->
                             Text(
-                                text = eventError.orEmpty(),
+                                text = error,
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
+
                     } else {
+
                         if (events.isEmpty()) {
                             Text(
                                 text = "Nenhum evento cadastrado neste aparelho.",
@@ -410,7 +345,7 @@ fun HomeScreen(
                                 OutlinedButton(
                                     onClick = {
                                         onEnableEventMode(event.localId)
-                                        showEventDialog = false
+                                        closeEventDialog()
                                     },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
@@ -425,9 +360,9 @@ fun HomeScreen(
                                             fontWeight = FontWeight.SemiBold
                                         )
 
-                                        event.location?.let {
+                                        event.location?.let { location ->
                                             Text(
-                                                text = it,
+                                                text = location,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -448,14 +383,12 @@ fun HomeScreen(
                             } else {
                                 onCreateEvent(
                                     eventName.trim(),
-                                    eventLocation.trim().takeIf { it.isNotEmpty() }
+                                    eventLocation.trim().takeIf {
+                                        it.isNotEmpty()
+                                    }
                                 )
 
-                                eventName = ""
-                                eventLocation = ""
-                                eventError = null
-                                showCreateForm = false
-                                showEventDialog = false
+                                closeEventDialog()
                             }
                         }
                     ) {
@@ -477,13 +410,21 @@ fun HomeScreen(
                     onClick = {
                         if (showCreateForm) {
                             showCreateForm = false
+                            eventName = ""
+                            eventLocation = ""
                             eventError = null
                         } else {
-                            showEventDialog = false
+                            closeEventDialog()
                         }
                     }
                 ) {
-                    Text(if (showCreateForm) "Voltar" else "Cancelar")
+                    Text(
+                        if (showCreateForm) {
+                            "Voltar"
+                        } else {
+                            "Cancelar"
+                        }
+                    )
                 }
             }
         )

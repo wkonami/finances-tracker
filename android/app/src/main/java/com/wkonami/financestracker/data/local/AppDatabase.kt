@@ -27,7 +27,7 @@ class DatabaseConverters {
         SaleEntity::class,
         EventEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(DatabaseConverters::class)
@@ -143,6 +143,22 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+
+            override fun migrate(db: SupportSQLiteDatabase) {
+
+                db.execSQL("""
+                    ALTER TABLE sales
+                    ADD COLUMN isPaid INTEGER NOT NULL DEFAULT 1
+                """.trimIndent())
+
+                db.execSQL("""
+                    ALTER TABLE sales
+                    ADD COLUMN isDelivered INTEGER NOT NULL DEFAULT 1
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
 
             return INSTANCE ?: synchronized(this) {
@@ -152,7 +168,10 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "finances_tracker.db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3
+                    )
                     .build()
 
                 INSTANCE = instance

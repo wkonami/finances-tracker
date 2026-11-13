@@ -20,7 +20,9 @@ data class SyncSaleRequest(
     val externalId: String,
     val debtorName: String,
     val totalAmount: String,
-    val notes: String?
+    val notes: String?,
+    val isPaid: Boolean,
+    val isDelivered: Boolean
 )
 
 data class SyncResponse(

@@ -23,7 +23,9 @@ class SaleRepository(
         debtorName: String,
         amountInCents: Long,
         note: String?,
-        eventId: Long? = null
+        eventId: Long? = null,
+        isPaid: Boolean = true,
+        isDelivered: Boolean = true
     ): Long {
 
         require(debtorName.isNotBlank()) {
@@ -46,6 +48,8 @@ class SaleRepository(
             amountInCents = amountInCents,
             note = note?.trim()?.takeIf { it.isNotEmpty() },
             eventId = eventId,
+            isPaid = isPaid,
+            isDelivered = isDelivered,
             createdAt = System.currentTimeMillis()
         )
 

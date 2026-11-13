@@ -3,6 +3,7 @@ package com.wkonami.financestracker
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -99,8 +101,23 @@ class MainActivity : ComponentActivity() {
                     it.localId == eventModeState.selectedEventId
                 }
 
-                var currentScreen by remember {
-                    mutableStateOf(AppScreen.HOME)
+                // Pilha de navegação
+                val backStack = remember {
+                    mutableStateListOf(AppScreen.HOME)
+                }
+
+                val currentScreen = backStack.last()
+
+                fun navigateTo(screen: AppScreen) {
+                    if (backStack.lastOrNull() != screen) {
+                        backStack.add(screen)
+                    }
+                }
+
+                fun navigateBack() {
+                    if (backStack.size > 1) {
+                        backStack.removeAt(backStack.lastIndex)
+                    }
                 }
 
                 var syncProgress by remember {
@@ -109,6 +126,13 @@ class MainActivity : ComponentActivity() {
 
                 var isSyncing by remember {
                     mutableStateOf(false)
+                }
+
+                // Gerenciamento do botão Voltar do Android
+                BackHandler(enabled = backStack.size > 1) {
+                    if (!(currentScreen == AppScreen.SYNC && isSyncing)) {
+                        navigateBack()
+                    }
                 }
 
                 Scaffold(
@@ -123,6 +147,7 @@ class MainActivity : ComponentActivity() {
                                 eventModeEnabled = eventModeState.enabled,
                                 selectedEvent = selectedEvent,
                                 events = events,
+
                                 onEnableEventMode = { eventId ->
                                     coroutineScope.launch {
                                         try {
@@ -145,11 +170,13 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 },
+
                                 onDisableEventMode = {
                                     coroutineScope.launch {
                                         eventModePreferences.disable()
                                     }
                                 },
+
                                 onCreateEvent = { name, location ->
                                     coroutineScope.launch {
                                         try {
@@ -178,15 +205,23 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 },
+
                                 onNewSaleClick = {
-                                    currentScreen = AppScreen.NEW_SALE
+                                    navigateTo(AppScreen.NEW_SALE)
                                 },
+
                                 onSalesClick = {
-                                    currentScreen = AppScreen.SALES_LIST
+                                    navigateTo(AppScreen.SALES_LIST)
                                 },
+
                                 onSyncClick = {
-                                    currentScreen = AppScreen.SYNC
+                                    navigateTo(AppScreen.SYNC)
                                 },
+
+                                onSettingsClick = {
+                                    // Tela de configurações será implementada posteriormente.
+                                },
+
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
@@ -195,10 +230,17 @@ class MainActivity : ComponentActivity() {
                             NewSaleScreen(
                                 eventModeEnabled = eventModeState.enabled,
                                 eventName = selectedEvent?.name,
+
                                 onBack = {
-                                    currentScreen = AppScreen.HOME
+                                    navigateBack()
                                 },
-                                onSaveSale = { debtorName, amountInCents, note ->
+
+                                onSaveSale = {
+                                    debtorName,
+                                    amountInCents,
+                                    note,
+                                    isPaid,
+                                    isDelivered ->
 
                                     val eventId = if (eventModeState.enabled) {
                                         selectedEvent?.localId
@@ -217,10 +259,12 @@ class MainActivity : ComponentActivity() {
                                         },
                                         amountInCents = amountInCents,
                                         note = note,
-                                        eventId = eventId
+                                        eventId = eventId,
+                                        isPaid = isPaid,
+                                        isDelivered = isDelivered
                                     )
 
-                                    currentScreen = AppScreen.HOME
+                                    navigateBack()
 
                                     Toast.makeText(
                                         context,
@@ -228,6 +272,7 @@ class MainActivity : ComponentActivity() {
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 },
+
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
@@ -235,9 +280,11 @@ class MainActivity : ComponentActivity() {
                         AppScreen.SALES_LIST -> {
                             SalesListScreen(
                                 sales = sales,
+
                                 onBack = {
-                                    currentScreen = AppScreen.HOME
+                                    navigateBack()
                                 },
+
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
@@ -247,11 +294,13 @@ class MainActivity : ComponentActivity() {
                                 pendingSalesCount = pendingCount,
                                 progress = syncProgress,
                                 isSyncing = isSyncing,
+
                                 onBack = {
                                     if (!isSyncing) {
-                                        currentScreen = AppScreen.HOME
+                                        navigateBack()
                                     }
                                 },
+
                                 onSync = { username, password ->
 
                                     if (isSyncing) return@SyncScreen
@@ -318,6 +367,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 },
+
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
