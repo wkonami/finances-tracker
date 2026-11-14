@@ -19,8 +19,8 @@ object PixPayloadGenerator {
         }
 
         val pixKey = config.pixKey.trim()
-        val merchantName = config.merchantName.trim()
-        val merchantCity = config.merchantCity.trim()
+        val merchantName = config.merchantName.trim().uppercase()
+        val merchantCity = config.merchantCity.trim().uppercase()
 
         require(merchantName.toByteArray(Charsets.UTF_8).size <= 25) {
             "O nome do recebedor deve ter no máximo 25 bytes."
@@ -36,7 +36,7 @@ object PixPayloadGenerator {
 
         // Informações da conta Pix
         val merchantAccountInformation =
-            tlv("00", "br.gov.bcb.pix") +
+            tlv("00", "BR.GOV.BCB.PIX") +
             tlv("01", pixKey)
 
         // Dados adicionais da transação

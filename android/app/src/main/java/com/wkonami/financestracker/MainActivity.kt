@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -32,11 +31,12 @@ import com.wkonami.financestracker.data.repository.SyncPhase
 import com.wkonami.financestracker.data.repository.SyncProgress
 import com.wkonami.financestracker.data.repository.SyncRepository
 import com.wkonami.financestracker.ui.screens.HomeScreen
+import com.wkonami.financestracker.ui.screens.SettingsScreen
 import com.wkonami.financestracker.ui.screens.sale.NewSaleScreen
 import com.wkonami.financestracker.ui.screens.sale.SalesListScreen
+import com.wkonami.financestracker.ui.screens.settings.PixSettingsScreen
 import com.wkonami.financestracker.ui.screens.sync.SyncScreen
 import com.wkonami.financestracker.ui.theme.FinancesTrackerPDVTheme
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private const val API_BASE_URL = "https://finances-q6s6.onrender.com/api"
@@ -45,7 +45,9 @@ private enum class AppScreen {
     HOME,
     NEW_SALE,
     SALES_LIST,
-    SYNC
+    SYNC,
+    SETTINGS,
+    PIX_SETTINGS
 }
 
 class MainActivity : ComponentActivity() {
@@ -94,30 +96,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val coroutineScope = rememberCoroutineScope()
-
-                // Configuração temporária do Pix para testes.
-                // Só salva os dados se ainda não houver uma configuração.
-                LaunchedEffect(Unit) {
-                    try {
-                        val savedConfig = pixConfigStorage.config.first()
-
-                        if (!savedConfig.isConfigured) {
-                            pixConfigStorage.save(
-                                PixConfig(
-                                    pixKey = "SUA_CHAVE_PIX",
-                                    merchantName = "NOME DO RECEBEDOR",
-                                    merchantCity = "SUA CIDADE"
-                                )
-                            )
-                        }
-                    } catch (error: Exception) {
-                        android.util.Log.e(
-                            "PIX_CONFIG",
-                            "Não foi possível carregar a configuração Pix.",
-                            error
-                        )
-                    }
-                }
 
                 val pendingCount by repository
                     .observePendingCount()
@@ -259,7 +237,7 @@ class MainActivity : ComponentActivity() {
                                 },
 
                                 onSettingsClick = {
-                                    // Tela de configurações será implementada posteriormente.
+                                    navigateTo(AppScreen.SETTINGS)
                                 },
 
                                 modifier = Modifier.padding(innerPadding)
@@ -433,6 +411,70 @@ class MainActivity : ComponentActivity() {
 
                                         } finally {
                                             isSyncing = false
+                                        }
+                                    }
+                                },
+
+                                modifier = Modifier.padding(innerPadding)
+                            )
+                        }
+
+                        AppScreen.SETTINGS -> {
+                            SettingsScreen(
+                                onBack = {
+                                    navigateBack()
+                                },
+
+                                onPixClick = {
+                                    navigateTo(AppScreen.PIX_SETTINGS)
+                                },
+
+                                onUnavailableClick = { menu ->
+                                    Toast.makeText(
+                                        context,
+                                        "$menu estará disponível em uma atualização futura.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+
+                                modifier = Modifier.padding(innerPadding)
+                            )
+                        }
+
+                        AppScreen.PIX_SETTINGS -> {
+                            PixSettingsScreen(
+                                config = pixConfig,
+
+                                onBack = {
+                                    navigateBack()
+                                },
+
+                                onSave = { newConfig ->
+                                    coroutineScope.launch {
+                                        try {
+                                            pixConfigStorage.save(newConfig)
+
+                                            Toast.makeText(
+                                                context,
+                                                "Configurações Pix salvas com sucesso!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+
+                                            navigateBack()
+
+                                        } catch (error: Exception) {
+                                            android.util.Log.e(
+                                                "PIX_CONFIG",
+                                                "Erro ao salvar configurações Pix.",
+                                                error
+                                            )
+
+                                            Toast.makeText(
+                                                context,
+                                                error.message
+                                                    ?: "Não foi possível salvar as configurações Pix.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     }
                                 },

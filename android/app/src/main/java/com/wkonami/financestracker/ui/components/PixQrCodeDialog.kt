@@ -119,7 +119,7 @@ fun PixQrCodeDialog(
                                     BigDecimal(amountInCents).movePointLeft(2)
                                 )
                             } else {
-                                "Valor livre"
+                                "QR Code"
                             },
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
@@ -144,14 +144,6 @@ fun PixQrCodeDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        if (amountInCents == null) {
-                            Text(
-                                text = "O cliente poderá informar o valor do pagamento.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
                         OutlinedButton(
                             onClick = {
                                 clipboardManager.setText(
@@ -160,7 +152,7 @@ fun PixQrCodeDialog(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Copiar Pix Copia e Cola")
+                            Text("Pix Copia e Cola")
                         }
                     }
                 }

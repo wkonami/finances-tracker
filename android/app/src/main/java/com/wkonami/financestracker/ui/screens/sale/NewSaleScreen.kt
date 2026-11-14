@@ -320,8 +320,8 @@ fun NewSaleScreen(
                 ) {
                     val methods = listOf(
                         PaymentMethod.CASH to "Dinheiro",
-                        PaymentMethod.PIX to "Pix",
-                        PaymentMethod.CARD to "Cartão"
+                        PaymentMethod.CARD to "Cartão",
+                        PaymentMethod.PIX to "Pix"
                     )
 
                     methods.forEach { (method, label) ->
@@ -366,7 +366,7 @@ fun NewSaleScreen(
                         enabled = !isSaving,
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("▦  GERAR QR")
+                        Text("QR")
                     }
                 }
             }
